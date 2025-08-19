@@ -1,0 +1,42 @@
+disabled_rules:
+  - todo
+  - trailing_comma
+  - nesting
+  - identifier_name
+
+type_name:
+  excluded:
+    - ID
+
+function_parameter_count:
+  warning: 5
+  error: 8
+
+generic_type_name:
+  max_length:
+    warning: 40
+    error: 100
+
+included:
+  - Sources
+  - Tests
+
+opt_in_rules:
+  - attributes
+  - empty_count
+  - closure_spacing
+  - contains_over_first_not_nil
+  - missing_docs
+  - modifier_order
+  - convenience_type
+  - pattern_matching_keywords
+  - multiline_parameters_brackets
+  - multiline_arguments_brackets
+
+custom_rules:
+  spaces_over_tabs:
+    included: ".*\\.swift"
+    name: "Spaces over Tabs"
+    regex: "\t"
+    message: "Prefer spaces for indents over tabs. See Xcode setting: 'Text Editing' -> 'Indentation'"
+    severity: warning

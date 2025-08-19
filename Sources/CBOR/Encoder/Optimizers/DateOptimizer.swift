@@ -1,0 +1,44 @@
+//
+//  DateOptimizer.swift
+//  SwiftCBOR
+//
+//  Created by Khan Winter on 8/17/25.
+//
+
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
+
+struct StringDateOptimizer: EncodingOptimizer {
+    var optimizer: SmallStringOptimizer
+
+    var type: MajorType { .tagged }
+    var argument: UInt8 { 0 }
+    var contentSize: Int { optimizer.size }
+
+    init(value: Date) {
+        optimizer = SmallStringOptimizer(value: ISO8601DateFormatter().string(from: value).utf8)
+    }
+
+    mutating func writePayload(to data: inout Slice<UnsafeMutableRawBufferPointer>) {
+        optimizer.write(to: &data)
+    }
+}
+
+struct EpochDateOptimizer: EncodingOptimizer {
+    var optimizer: DoubleOptimizer
+
+    var type: MajorType { .tagged }
+    var argument: UInt8 { 1 }
+    var contentSize: Int { optimizer.size }
+
+    init(value: Date) {
+        optimizer = DoubleOptimizer(value: value.timeIntervalSince1970)
+    }
+
+    mutating func writePayload(to data: inout Slice<UnsafeMutableRawBufferPointer>) {
+        optimizer.write(to: &data)
+    }
+}
