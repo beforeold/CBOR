@@ -12,8 +12,8 @@ extension FixedWidthInteger {
         assert(Self.byteCount <= data.count)
         withUnsafeBytes(of: self.bigEndian) { raw in
             UnsafeMutableRawBufferPointer(rebasing: data).copyMemory(from: raw)
+            data.removeFirst(raw.count)
         }
-        data.removeFirst(Self.byteCount)
     }
 
     @inline(__always)

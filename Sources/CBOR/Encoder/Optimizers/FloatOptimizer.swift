@@ -18,5 +18,6 @@ struct FloatOptimizer: EncodingOptimizer {
         withUnsafeBytes(of: &bytes) { ptr in
             UnsafeMutableRawBufferPointer(rebasing: data).copyBytes(from: ptr)
         }
+        data.removeFirst(4)
     }
 }

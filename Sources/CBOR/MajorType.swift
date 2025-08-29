@@ -6,7 +6,7 @@
 //
 
 @usableFromInline
-enum MajorType: UInt8 {
+enum MajorType: UInt8, Sendable, Hashable, Equatable {
     case uint = 0
     case nint = 1
     case bytes = 2
@@ -16,7 +16,8 @@ enum MajorType: UInt8 {
     case tagged = 6
     case simple = 7
 
-    @inlinable
+    @inline(__always)
+    @usableFromInline
     init?(rawValue: UInt8) {
         // We only care about the top 3 bits
         switch rawValue >> 5 {
@@ -35,5 +36,9 @@ enum MajorType: UInt8 {
     @inline(__always)
     @inlinable var bits: UInt8 {
         rawValue << 5
+    }
+
+    var intValue: Int {
+        Int(bits)
     }
 }

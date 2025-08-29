@@ -37,6 +37,7 @@ extension EncodingOptimizer {
         writePayload(to: &data)
     }
 
+    @inline(__always)
     @inlinable
     func writeHeader(to data: inout Slice<UnsafeMutableRawBufferPointer>) {
         // No-op by default

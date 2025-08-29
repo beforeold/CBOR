@@ -9,7 +9,7 @@ import Testing
 import Foundation
 @testable import CBOR
 
-@Suite("Encodable")
+@Suite("EncodableTests")
 struct EncodableTests {
     @Test
     func encodeNull() throws {
@@ -86,6 +86,24 @@ struct EncodableTests {
     }
 
     @Test
+    func encodeFloat() throws {
+        let value: Float = 100000.0
+        let data = "fa47c35000".asHexData()
+        let result = try CBOREncoder().encode(value)
+        #expect(data == result)
+        print(result.hexString())
+    }
+
+    @Test
+    func encodeDouble() throws {
+        let value: Double = 0.10035
+        let data = "FB3FB9B089A0275254".asHexData()
+        let result = try CBOREncoder().encode(value)
+        #expect(data == result)
+        print(result.hexString())
+    }
+
+    @Test
     func encodeStrings() throws {
         let empty = try CBOREncoder().encode("")
         #expect(empty == Data([0x60]))
@@ -111,6 +129,8 @@ struct EncodableTests {
 
     @Test
     func mixedByteArraysEncodeCorrectly() throws {
+        // TODO: Make the container swap to mixed mode if necessary.
+
         /// See note in ``UnkeyeyedCBOREncodingContainer`` about mixed collections of ints
         struct Mixed: Encodable {
             func encode(to encoder: any Encoder) throws {
@@ -192,6 +212,21 @@ struct EncodableTests {
             encoded == [0xa2, 0x63, 0x61, 0x67, 0x65, 0x18, 0x1b, 0x64, 0x6e, 0x61, 0x6d, 0x65, 0x63, 0x48, 0x61, 0x6d]
         )
     }
+
+    @Test
+    func encodeMoreComplexStructs() throws {
+        let encoder = CBOREncoder()
+
+        let data = try encoder.encode(Company.mock)
+        #expect(data == "A469656D706C6F796565738AA563616765181E65656D61696C71616C696365406578616D706C652E636F6D686973416374697665F5646E616D6565416C6963656474616773836573776966746463626F726962656E63686D61726BA563616765181E65656D61696C71616C696365406578616D706C652E636F6D686973416374697665F5646E616D6565416C6963656474616773836573776966746463626F726962656E63686D61726BA563616765181E65656D61696C71616C696365406578616D706C652E636F6D686973416374697665F5646E616D6565416C6963656474616773836573776966746463626F726962656E63686D61726BA563616765181E65656D61696C71616C696365406578616D706C652E636F6D686973416374697665F5646E616D6565416C6963656474616773836573776966746463626F726962656E63686D61726BA563616765181E65656D61696C71616C696365406578616D706C652E636F6D686973416374697665F5646E616D6565416C6963656474616773836573776966746463626F726962656E63686D61726BA563616765181E65656D61696C71616C696365406578616D706C652E636F6D686973416374697665F5646E616D6565416C6963656474616773836573776966746463626F726962656E63686D61726BA563616765181E65656D61696C71616C696365406578616D706C652E636F6D686973416374697665F5646E616D6565416C6963656474616773836573776966746463626F726962656E63686D61726BA563616765181E65656D61696C71616C696365406578616D706C652E636F6D686973416374697665F5646E616D6565416C6963656474616773836573776966746463626F726962656E63686D61726BA563616765181E65656D61696C71616C696365406578616D706C652E636F6D686973416374697665F5646E616D6565416C6963656474616773836573776966746463626F726962656E63686D61726BA563616765181E65656D61696C71616C696365406578616D706C652E636F6D686973416374697665F5646E616D6565416C6963656474616773836573776966746463626F726962656E63686D61726B67666F756E6465641907CF686D65746164617461A268696E6475737472796474656368686C6F636174696F6E6672656D6F7465646E616D656941636D6520436F7270".asHexData())
+    }
+
+    @Test
+    func uint16() throws {
+        let encoder = CBOREncoder()
+        let data = try encoder.encode(1999)
+        #expect(data == "1907CF".asHexData())
+    }
 }
 
 extension Array {
@@ -199,5 +234,27 @@ extension Array {
         stride(from: 0, to: count, by: size).map {
             Array(self[$0 ..< Swift.min($0 + size, count)])
         }
+    }
+}
+
+extension String {
+    func asHexData() -> Data {
+        guard self.count.isMultiple(of: 2) else {
+            fatalError()
+        }
+
+        let chars = self.map { $0 }
+        let bytes = stride(from: 0, to: chars.count, by: 2)
+            .map { String(chars[$0]) + String(chars[$0 + 1]) }
+            .compactMap { UInt8($0, radix: 16) }
+
+        guard self.count / bytes.count == 2 else { fatalError() }
+        return Data(bytes)
+    }
+}
+
+extension Data {
+    func hexString() -> String {
+        map { String(format: "%02hhX", $0) }.joined()
     }
 }

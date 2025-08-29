@@ -1,5 +1,5 @@
 //
-//  InternalEncoder.swift
+//  SingleValueCBOREncodingContainer.swift
 //  SwiftCBOR
 //
 //  Created by Khan Winter on 8/17/25.
@@ -33,7 +33,9 @@ struct SingleValueCBOREncodingContainer<Storage: TemporaryEncodingStorage>: Enco
 }
 
 extension SingleValueCBOREncodingContainer: SingleValueEncodingContainer {
-    func encodeNil() throws { parent.register(NilOptimizer()) }
+    func encodeNil() throws {
+        parent.register(NilOptimizer())
+    }
 
     func encode(_ value: String) throws {
         parent.register(StringOptimizer(value: value))
@@ -68,6 +70,8 @@ extension SingleValueCBOREncodingContainer: SingleValueEncodingContainer {
             }
         } else if let uuid = value as? UUID {
             parent.register(UUIDOptimizer(value: uuid))
+        } else if let data = value as? Data {
+            parent.register(ByteStringOptimizer(value: data))
         } else {
             try value.encode(to: self)
         }

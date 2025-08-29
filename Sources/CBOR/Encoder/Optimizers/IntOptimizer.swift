@@ -7,43 +7,24 @@
 
 @inlinable
 func IntOptimizer<IntType: FixedWidthInteger>(value: IntType) -> EncodingOptimizer {
+    let encodingValue: UInt
     if value < 0 {
-        let encodingValue: UInt = UInt(-1 - value)
-        if value > -Constants.maxArgSize {
-            return SmallNegativeIntOptimizer(value: encodingValue)
-        } else {
-            if (0...UInt(UInt8.max)).contains(encodingValue) {
-                return NegativeIntOptimizer(value: UInt8(encodingValue))
-            }
-
-            if (0...UInt(UInt16.max)).contains(encodingValue) {
-                return NegativeIntOptimizer(value: UInt16(encodingValue))
-            }
-
-            if (0...UInt(UInt32.max)).contains(encodingValue) {
-                return NegativeIntOptimizer(value: UInt32(encodingValue))
-            }
-
-            return NegativeIntOptimizer(value: encodingValue)
+        encodingValue = UInt(-1 - value)
+        return switch encodingValue {
+        case let value where value < Constants.maxArgSize: SmallNegativeIntOptimizer(value: encodingValue)
+        case let value where value <= UInt8.max: NegativeIntOptimizer(value: UInt8(encodingValue))
+        case let value where value <= UInt16.max: NegativeIntOptimizer(value: UInt16(encodingValue))
+        case let value where value <= UInt32.max: NegativeIntOptimizer(value: UInt32(encodingValue))
+        default: NegativeIntOptimizer(value: encodingValue)
         }
     } else {
-        if value < Constants.maxArgSize {
-            return SmallPositiveIntOptimizer(value: value)
-        } else {
-            let encodingValue = UInt(value)
-            if (0...UInt(UInt8.max)).contains(encodingValue) {
-                return PositiveIntOptimizer(value: UInt8(encodingValue))
-            }
-
-            if (0...UInt(UInt16.max)).contains(encodingValue) {
-                return PositiveIntOptimizer(value: UInt16(encodingValue))
-            }
-
-            if (0...UInt(UInt32.max)).contains(encodingValue) {
-                return PositiveIntOptimizer(value: UInt32(encodingValue))
-            }
-
-            return PositiveIntOptimizer(value: encodingValue)
+        encodingValue = UInt(value)
+        return switch encodingValue {
+        case let value where value < Constants.maxArgSize: SmallPositiveIntOptimizer(value: encodingValue)
+        case let value where value <= UInt8.max: PositiveIntOptimizer(value: UInt8(encodingValue))
+        case let value where value <= UInt16.max: PositiveIntOptimizer(value: UInt16(encodingValue))
+        case let value where value <= UInt32.max: PositiveIntOptimizer(value: UInt32(encodingValue))
+        default: PositiveIntOptimizer(value: encodingValue)
         }
     }
 }
@@ -52,8 +33,11 @@ func IntOptimizer<IntType: FixedWidthInteger>(value: IntType) -> EncodingOptimiz
 struct SmallPositiveIntOptimizer<IntType: FixedWidthInteger>: EncodingOptimizer {
     let value: UInt8
 
+    @inline(__always)
     @usableFromInline var type: MajorType { .uint }
+    @inline(__always)
     @usableFromInline var argument: UInt8 { value }
+    @inline(__always)
     @usableFromInline var contentSize: Int { 0 }
 
     @usableFromInline
@@ -71,8 +55,11 @@ struct SmallPositiveIntOptimizer<IntType: FixedWidthInteger>: EncodingOptimizer 
 struct SmallNegativeIntOptimizer<IntType: FixedWidthInteger>: EncodingOptimizer {
     let value: UInt8
 
+    @inline(__always)
     @usableFromInline var type: MajorType { .nint }
+    @inline(__always)
     @usableFromInline var argument: UInt8 { UInt8(value) }
+    @inline(__always)
     @usableFromInline var contentSize: Int { 0 }
 
     @usableFromInline
@@ -90,8 +77,11 @@ struct SmallNegativeIntOptimizer<IntType: FixedWidthInteger>: EncodingOptimizer 
 struct PositiveIntOptimizer<IntType: FixedWidthInteger>: EncodingOptimizer {
     let value: IntType
 
+    @inline(__always)
     @usableFromInline var type: MajorType { .uint }
+    @inline(__always)
     @usableFromInline var argument: UInt8 { IntType.argumentValue }
+    @inline(__always)
     @usableFromInline var contentSize: Int { IntType.byteCount }
 
     @usableFromInline
@@ -111,8 +101,11 @@ struct PositiveIntOptimizer<IntType: FixedWidthInteger>: EncodingOptimizer {
 struct NegativeIntOptimizer<IntType: FixedWidthInteger>: EncodingOptimizer {
     let value: IntType
 
+    @inline(__always)
     @usableFromInline var type: MajorType { .nint }
+    @inline(__always)
     @usableFromInline var argument: UInt8 { IntType.argumentValue }
+    @inline(__always)
     @usableFromInline var contentSize: Int { IntType.byteCount }
 
     @usableFromInline
