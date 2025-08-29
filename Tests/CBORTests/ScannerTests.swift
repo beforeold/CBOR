@@ -108,7 +108,8 @@ struct ScannerTests {
         }
     }
 
-    @Test func indeterminateNestedArray() throws {
+    @Test
+    func indeterminateNestedArray() throws {
         let expectedMap = [128, 2, 22, 0, 10, 128, 2, 6, 1, 4, 2, 3, 0, 3, 4, 0, 128, 2, 6, 5, 4, 4, 7, 0, 5, 8, 0]
         let data = "9F9F0203FF9F0405FFFF".asHexData()
         try data.withUnsafeBytes {

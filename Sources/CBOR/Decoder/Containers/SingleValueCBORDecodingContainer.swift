@@ -13,7 +13,7 @@ struct SingleValueCBORDecodingContainer: DecodingContextContainer {
 }
 
 extension SingleValueCBORDecodingContainer: Decoder {
-    func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
+    func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key: CodingKey {
         try KeyedDecodingContainer(KeyedCBORDecodingContainer(context: context, data: data))
     }
 
@@ -215,6 +215,7 @@ extension SingleValueCBORDecodingContainer: SingleValueDecodingContainer {
     }
 
     func decode<T: Decodable>(_ type: T.Type) throws -> T {
+        // swiftlint:disable force_cast
         return if T.self == Date.self {
             try _decode(Date.self) as! T // Unfortunate force unwrap, but necessary
         } else if T.self == UUID.self {
@@ -224,5 +225,6 @@ extension SingleValueCBORDecodingContainer: SingleValueDecodingContainer {
         } else {
             try T(from: self)
         }
+        // swiftlint:enable force_cast
     }
 }

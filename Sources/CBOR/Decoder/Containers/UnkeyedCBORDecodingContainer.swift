@@ -55,11 +55,11 @@ struct UnkeyedCBORDecodingContainer: DecodingContextContainer, UnkeyedDecodingCo
     ) throws -> KeyedDecodingContainer<NestedKey> {
         try consumeDecoder().container(keyedBy: type)
     }
-    
+
     mutating func nestedUnkeyedContainer() throws -> any UnkeyedDecodingContainer {
         try consumeDecoder().unkeyedContainer()
     }
-    
+
     mutating func superDecoder() throws -> Decoder {
         try consumeDecoder()
     }

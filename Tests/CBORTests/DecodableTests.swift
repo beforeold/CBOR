@@ -9,12 +9,13 @@ import Testing
 import Foundation
 @testable import CBOR
 
-//@_optimize(none)
-//public func blackHole(_: some Any) {}
+// @_optimize(none)
+// public func blackHole(_: some Any) {}
 
 @Suite
 struct DecodableTests {
-    @Test func uint8() throws {
+    @Test
+    func uint8() throws {
         var value = try CBORDecoder().decode(UInt8.self, from: [0])
         #expect(value == 0)
         value = try CBORDecoder().decode(UInt8.self, from: [1])
@@ -32,7 +33,8 @@ struct DecodableTests {
         #expect(throws: DecodingError.self) { try CBORDecoder().decode(UInt8.self, from: [128]) }
     }
 
-    @Test func uint16() throws {
+    @Test
+    func uint16() throws {
         var value = try CBORDecoder().decode(UInt16.self, from: [0])
         #expect(value == 0)
         value = try CBORDecoder().decode(UInt16.self, from: [1])
@@ -57,7 +59,8 @@ struct DecodableTests {
         #expect(throws: DecodingError.self) { try CBORDecoder().decode(UInt16.self, from: [25, 0]) }
     }
 
-    @Test func uint32() throws {
+    @Test
+    func uint32() throws {
         var value: UInt32 = try CBORDecoder().decode(UInt32.self, from: [0])
         #expect(value == 0)
         value = try CBORDecoder().decode(UInt32.self, from: [1])
@@ -94,7 +97,8 @@ struct DecodableTests {
         #expect(throws: DecodingError.self) { try CBORDecoder().decode(UInt32.self, from: [26, 0, 0, 0]) }
     }
 
-    @Test func uint64() throws {
+    @Test
+    func uint64() throws {
         var value: UInt64 = try CBORDecoder().decode(UInt64.self, from: [0])
         #expect(value == 0)
         value = try CBORDecoder().decode(UInt64.self, from: [1])
@@ -163,6 +167,7 @@ struct DecodableTests {
         ("6b68656c6c6f20776f726c64", "hello world"),
         ("60", ""),
         ("66e29da4efb88f", "❤️"),
+        // swiftlint:disable:next line_length
         ("782F68656C6C6F20776F726C642068656C6C6F20776F726C642068656C6C6F20776F726C642068656C6C6F20776F726C64", "hello world hello world hello world hello world")
     ])
     func string(data: String, expected: String) throws {
@@ -182,19 +187,22 @@ struct DecodableTests {
         #expect(string == expected)
     }
 
-    @Test func emptyMap() throws {
+    @Test
+    func emptyMap() throws {
         let data = "A0".asHexData()
         let dictionary = try CBORDecoder().decode([String: Int].self, from: data)
         #expect(dictionary.isEmpty)
     }
 
-    @Test func simpleMap() throws {
+    @Test
+    func simpleMap() throws {
         let data = "A262414201614102".asHexData()
         let dictionary = try CBORDecoder().decode([String: Int].self, from: data)
         #expect(dictionary == ["AB": 1, "A": 2])
     }
 
-    @Test func unkeyedContainerHasCountForIndeterminate() throws {
+    @Test
+    func unkeyedContainerHasCountForIndeterminate() throws {
         let data = "9F0203FF".asHexData()
         try data.withUnsafeBytes {
             let data = $0[...]
@@ -223,12 +231,14 @@ struct DecodableTests {
         }
     }
 
-    @Test func array() throws {
+    @Test
+    func array() throws {
         let twentyItems = "940101010101010101010101010101010101010101".asHexData()
         #expect(try CBORDecoder().decode([Int].self, from: twentyItems) == Array(repeating: 1, count: 20))
     }
 
-    @Test func indeterminateArray() throws {
+    @Test
+    func indeterminateArray() throws {
 //        let array = "9F0203FF".asHexData()
         let options = DecodingOptions(rejectIndeterminateLengthArrays: false)
 //        #expect(try CBORDecoder(options: options).decode([Int].self, from: array) == [2, 3])
@@ -246,7 +256,8 @@ struct DecodableTests {
         #expect(result == [[2, 3], [4, 5]])
     }
 
-    @Test func rejectsIndeterminateArrayWhenConfigured() throws {
+    @Test
+    func rejectsIndeterminateArrayWhenConfigured() throws {
         let array = "9FFF".asHexData()
         let options = DecodingOptions(rejectIndeterminateLengthArrays: true)
         #expect(throws: DecodingError.self) {

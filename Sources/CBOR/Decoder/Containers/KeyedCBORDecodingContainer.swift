@@ -99,7 +99,7 @@ struct KeyedCBORDecodingContainer<Key: CodingKey>: DecodingContextContainer, Key
     func nestedContainer<NestedKey: CodingKey >(
         keyedBy type: NestedKey.Type,
         forKey key: Key
-    ) throws -> KeyedDecodingContainer<NestedKey>{
+    ) throws -> KeyedDecodingContainer<NestedKey> {
         let region = try getRegion(forKey: key)
         let container = try KeyedCBORDecodingContainer<NestedKey>(context: context.appending(key), data: region)
         return KeyedDecodingContainer(container)

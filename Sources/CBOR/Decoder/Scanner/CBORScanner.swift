@@ -7,12 +7,18 @@
 
 import Foundation
 
-/// # Why?
-/// I'd have loved to use a 'pop' method for this, where we only decode as data is requested. However, the way Swift's
-/// decoding APIs work forces us to be able to be able to do random access for keys in maps, which requires scanning.
+/// # Why Scan?
+/// I'd have loved to use a 'pop' method for decoding, where we only decode as data is requested. However, the way
+/// Swift's decoding APIs work forces us to be able to be able to do random access for keys in maps, which requires
+/// scanning.
 ///
 /// Here we build a map of byte offsets and types to be able to quickly scan through a CBOR blob to find specific
 /// indices and keys.
+///
+/// # Dev Notes
+///
+/// - This is where we do any indeterminate length validation and rejection. The decoder containers themselves will
+///   take either indeterminate or specific lengths and decode them.
 @usableFromInline
 final class CBORScanner {
     @usableFromInline
@@ -25,17 +31,23 @@ final class CBORScanner {
         case rejectedIndeterminateLength(type: MajorType, offset: Int)
     }
 
-//    enum ScanItem: Int {
-//        case map // (childCount: Int, mapCount: Int, offset: Int, byteCount: Int)
-//        case array // (childCount: Int, mapCount: Int, offset: Int, byteCount: Int)
-//
-//        case int // (offset: Int, byteCount: Int)
-//        case string
-//        case byteString
-//        case tagged
-//        case simple (byteCount: Int)
-//    }
+    // MARK: - Results
 
+    /// After the scanner scans, this contains a map that allows the CBOR data to be scanned for values at arbitrary
+    /// positions, keys, etc. The map contents are represented literally as ints for performance but uses the
+    /// following map:
+    /// ```
+    /// enum ScanItem: Int {
+    ///     case map // (childCount: Int, mapCount: Int, offset: Int, byteCount: Int)
+    ///     case array // (childCount: Int, mapCount: Int, offset: Int, byteCount: Int)
+    ///
+    ///     case int // (offset: Int, byteCount: Int)
+    ///     case string
+    ///     case byteString
+    ///     case tagged
+    ///     case simple (byteCount: Int)
+    /// }
+    /// ```
     struct Results {
         var map: [Int] = []
 
@@ -126,6 +138,8 @@ final class CBORScanner {
         }
     }
 
+    // MARK: - Map Navigation
+
     func firstChildIndex(_ mapIndex: Int) -> Int {
         let byte = UInt8(results.map[mapIndex])
         guard let type = MajorType(rawValue: byte) else {
@@ -173,20 +187,9 @@ final class CBORScanner {
             }
         }
 
-
         switch type {
-        case .uint:
-            let size = try popByteCount()
-            let offset = reader.index
-            results.recordType(raw, currentByteIndex: offset, length: size)
-            guard reader.canRead(size) else { throw ScanError.unexpectedEndOfData }
-            reader.pop(size)
-        case .nint:
-            let size = try popByteCount()
-            let offset = reader.index
-            results.recordType(raw, currentByteIndex: offset, length: size)
-            guard reader.canRead(size) else { throw ScanError.unexpectedEndOfData }
-            reader.pop(size)
+        case .uint, .nint:
+            try scanInt(raw: raw)
         case .bytes:
             try scanBytesOrString(.bytes)
         case .string:
@@ -196,12 +199,28 @@ final class CBORScanner {
         case .map:
             try scanMap()
         case .simple:
-            let idx = reader.index
-            results.recordSimple(reader.pop(), currentByteIndex: idx)
-            reader.pop(simpleLength(raw))
+            scanSimple(raw: raw)
         case .tagged:
             fatalError()
         }
+    }
+
+    // MARK: - Scan Int
+
+    private func scanInt(raw: UInt8) throws {
+        let size = try popByteCount()
+        let offset = reader.index
+        results.recordType(raw, currentByteIndex: offset, length: size)
+        guard reader.canRead(size) else { throw ScanError.unexpectedEndOfData }
+        reader.pop(size)
+    }
+
+    // MARK: - Scan Simple
+
+    private func scanSimple(raw: UInt8) {
+        let idx = reader.index
+        results.recordSimple(reader.pop(), currentByteIndex: idx)
+        reader.pop(simpleLength(raw))
     }
 
     private func simpleLength(_ arg: UInt8) -> Int {
@@ -217,6 +236,8 @@ final class CBORScanner {
         }
     }
 
+    // MARK: - Scan String/Bytes
+
     private func scanBytesOrString(_ type: MajorType) throws {
         let raw = reader._peek() // already checked previously
 
@@ -229,8 +250,7 @@ final class CBORScanner {
             return
         }
 
-        if (type == .string && options.rejectIndeterminateLengthStrings)
-            || (type == .bytes && options.rejectIndeterminateLengthData) {
+        if (type == .string || type == .bytes) && options.rejectIndeterminateLengths {
             throw ScanError.rejectedIndeterminateLength(type: type, offset: reader.index)
         }
 
@@ -255,6 +275,8 @@ final class CBORScanner {
         results.recordType(raw, currentByteIndex: start, length: reader.index - start)
     }
 
+    // MARK: - Scan Array
+
     private func scanArray() throws {
         guard peekIsIndeterminate() else {
             let size = try reader.readNextInt(as: Int.self)
@@ -266,7 +288,7 @@ final class CBORScanner {
             return
         }
 
-        if options.rejectIndeterminateLengthArrays {
+        if options.rejectIndeterminateLengths {
             throw ScanError.rejectedIndeterminateLength(type: .array, offset: reader.index)
         }
 
@@ -282,6 +304,8 @@ final class CBORScanner {
         results.recordEnd(childCount: count, resultLocation: mapIdx, currentByteIndex: reader.index)
     }
 
+    // MARK: - Scan Map
+
     private func scanMap() throws {
         guard peekIsIndeterminate() else {
             let size = try reader.readNextInt(as: Int.self) * 2
@@ -293,7 +317,7 @@ final class CBORScanner {
             return
         }
 
-        if options.rejectIndeterminateLengthMaps {
+        if options.rejectIndeterminateLengths {
             throw ScanError.rejectedIndeterminateLength(type: .map, offset: reader.index)
         }
 
@@ -310,6 +334,8 @@ final class CBORScanner {
         results.recordEnd(childCount: count, resultLocation: mapIdx, currentByteIndex: reader.index)
     }
 }
+
+// MARK: - Utils
 
 extension CBORScanner {
     func popByteCount() throws -> Int {
@@ -330,10 +356,11 @@ extension CBORScanner {
     }
 }
 
+// MARK: - Debug Description
+
 #if DEBUG
 extension CBORScanner: CustomDebugStringConvertible {
-    @usableFromInline
-    var debugDescription: String {
+    @usableFromInline var debugDescription: String {
         var string = ""
         func indent(_ other: String, d: Int) { string += String(repeating: " ", count: d * 2) + other + "\n" }
 

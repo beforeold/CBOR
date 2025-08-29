@@ -11,7 +11,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
-/// An object that can serialize ``Codable`` objects into the CBOR serialization format.
+/// Serializes ``Encodable`` objects using the CBOR serialization format.
 ///
 /// To perform serialization, use the ``encode(_:)-6zhmp`` method to convert a Codable object to ``Data``. To
 /// configure encoding behavior, either pass customization options in with
@@ -20,7 +20,7 @@ public struct CBOREncoder {
     /// Options that determine the behavior of ``CBOREncoder``.
     public var options: EncodingOptions
 
-    /// Create a new CBOR encoder object.
+    /// Create a new CBOR encoder.
     /// - Parameters:
     ///   - forceStringKeys: See ``EncodingOptions/forceStringKeys``.
     ///   - useStringDates: See ``EncodingOptions/useStringDates``.

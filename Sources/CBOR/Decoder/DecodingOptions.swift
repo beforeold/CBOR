@@ -5,21 +5,16 @@
 //  Created by Khan Winter on 8/23/25.
 //
 
+/// Options that determine the behavior of ``CBORDecoder``.
 public struct DecodingOptions {
-    public var rejectIndeterminateLengthData: Bool
-    public var rejectIndeterminateLengthStrings: Bool
-    public var rejectIndeterminateLengthArrays: Bool
-    public var rejectIndeterminateLengthMaps: Bool
+    /// Set to `false` to allow indeterminate length objects to be decoded.
+    /// `true` by default.
+    ///
+    /// For deterministic encoding, this **must** be enabled.
+    public var rejectIndeterminateLengths: Bool
 
-    public init(
-        rejectIndeterminateLengthData: Bool = true,
-        rejectIndeterminateLengthStrings: Bool = true,
-        rejectIndeterminateLengthArrays: Bool = true,
-        rejectIndeterminateLengthMaps: Bool = true
-    ) {
-        self.rejectIndeterminateLengthData = rejectIndeterminateLengthData
-        self.rejectIndeterminateLengthStrings = rejectIndeterminateLengthStrings
-        self.rejectIndeterminateLengthArrays = rejectIndeterminateLengthArrays
-        self.rejectIndeterminateLengthMaps = rejectIndeterminateLengthMaps
+    /// Create a new options object.
+    public init(rejectIndeterminateLengths: Bool = true) {
+        self.rejectIndeterminateLengths = rejectIndeterminateLengths
     }
 }

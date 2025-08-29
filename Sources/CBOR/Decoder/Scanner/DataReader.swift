@@ -7,6 +7,11 @@
 
 import Foundation
 
+/// A mutable struct used by the `CBORScanner` to iteratively scan a CBOR blob.
+/// Since this isn't passed by reference, this represents the *entire* blob instead of a single value
+/// like `DataRegion`.
+///
+/// This results in some duplicated code. I'd love to remove it but it works for now I suppose.
 struct DataReader {
     private let data: Slice<UnsafeRawBufferPointer>
     private(set) var index = 0

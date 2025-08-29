@@ -5,7 +5,7 @@
 //  Created by Khan Winter on 8/17/25.
 //
 
-@inlinable
+@inlinable // swiftlint:disable:next cyclomatic_complexity
 func IntOptimizer<IntType: FixedWidthInteger>(value: IntType) -> EncodingOptimizer {
     let encodingValue: UInt
     if value < 0 {
