@@ -52,6 +52,12 @@ extension SingleValueCBORDecodingContainer: SingleValueDecodingContainer {
         try checkType(.uint, .nint)
         let value = try data.readInt(as: T.self)
         if data.type == .nint {
+            guard T.min < 0 else {
+                throw DecodingError.typeMismatch(
+                    Int.self,
+                    context.error("Found a negative integer while attempting to decode an unsigned int \(T.self).")
+                )
+            }
             return -1 - value
         }
         return value
@@ -91,7 +97,7 @@ extension SingleValueCBORDecodingContainer: SingleValueDecodingContainer {
             idx += 1
 
             guard let byteCount = argument.byteCount() else {
-                throw CBORScanner.ScanError.invalidSize(byte: argument, offset: data.globalIndex)
+                throw ScanError.invalidSize(byte: argument, offset: data.globalIndex)
             }
 
             let utf8Start = idx + Int(byteCount)
@@ -171,7 +177,7 @@ extension SingleValueCBORDecodingContainer: SingleValueDecodingContainer {
     }
 
     private func _decode(_: Data.Type) throws -> Data {
-        try checkType(.string)
+        try checkType(.bytes)
 
         if data.argument == Constants.indeterminateArg {
             return try decodeIndeterminateData()
@@ -201,7 +207,7 @@ extension SingleValueCBORDecodingContainer: SingleValueDecodingContainer {
             idx += 1
 
             guard let byteCount = argument.byteCount() else {
-                throw CBORScanner.ScanError.invalidSize(byte: argument, offset: data.globalIndex)
+                throw ScanError.invalidSize(byte: argument, offset: data.globalIndex)
             }
 
             let substringStart = idx + Int(byteCount)

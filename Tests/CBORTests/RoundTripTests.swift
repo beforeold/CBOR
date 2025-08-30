@@ -53,4 +53,64 @@ struct RoundTripTests {
             #expect(value == result)
         }
     }
+
+    @Test
+    func data() throws {
+        let value = Data([0xde, 0xad, 0xbe, 0xef])
+        let encoded = try CBOREncoder().encode(value)
+        let decoded = try CBORDecoder().decode(Data.self, from: encoded)
+        #expect(value == decoded)
+    }
+
+    @Test
+    func emptyData() throws {
+        let value = Data()
+        let encoded = try CBOREncoder().encode(value)
+        let decoded = try CBORDecoder().decode(Data.self, from: encoded)
+        #expect(value == decoded)
+    }
+
+    @Test
+    func string() throws {
+        let value = "Hello, CBOR 👋"
+        let encoded = try CBOREncoder().encode(value)
+        let decoded = try CBORDecoder().decode(String.self, from: encoded)
+        #expect(value == decoded)
+    }
+
+    @Test
+    func emptyString() throws {
+        let value = ""
+        let encoded = try CBOREncoder().encode(value)
+        let decoded = try CBORDecoder().decode(String.self, from: encoded)
+        #expect(value == decoded)
+    }
+
+    @Test
+    func person() throws {
+        let value = Person.mock
+        let encoded = try CBOREncoder().encode(value)
+        let decoded = try CBORDecoder().decode(Person.self, from: encoded)
+        #expect(value.name == decoded.name)
+        #expect(value.age == decoded.age)
+        #expect(value.email == decoded.email)
+        #expect(value.isActive == decoded.isActive)
+        #expect(value.tags == decoded.tags)
+    }
+
+    @Test
+    func company() throws {
+        let value = Company.mock
+        let encoded = try CBOREncoder().encode(value)
+        let decoded = try CBORDecoder().decode(Company.self, from: encoded)
+        #expect(value.name == decoded.name)
+        #expect(value.founded == decoded.founded)
+        #expect(value.employees.count == decoded.employees.count)
+        #expect(value.metadata == decoded.metadata)
+
+        // sanity check one employee too
+        if let first = decoded.employees.first {
+            #expect(first.name == Person.mock.name)
+        }
+    }
 }

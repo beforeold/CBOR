@@ -86,37 +86,15 @@ struct DataReader {
         peekType() == .simple && peekArgument() == 22
     }
 
-    @inline(__always)
-    mutating func readInt<F: FixedWidthInteger>(as: F.Type) throws -> F {
-        guard canRead(F.byteCount) else {
-            throw CBORScanner.ScanError.unexpectedEndOfData
-        }
-        var val = F.zero
-        for idx in 0..<(F.byteCount) {
-            let shift = (F.byteCount - idx - 1) * 8
-            val |= F(pop()) << shift
-        }
-        return F(val)
-    }
-
     /// Reads the next variable-sized integer off the data stack.
     @inlinable
     mutating func readNextInt<T: FixedWidthInteger>(as: T.Type) throws -> T {
-        let byteCount = popArgument()
-        return switch byteCount {
-        case let value where value < Constants.maxArgSize:
-            T(value)
-        case 24:
-            T(try readInt(as: UInt8.self))
-        case 25:
-            T(try readInt(as: UInt16.self))
-        case 26:
-            T(try readInt(as: UInt32.self))
-        case 27:
-            T(try readInt(as: UInt64.self))
-        default:
-            throw CBORScanner.ScanError.invalidSize(byte: byteCount, offset: index - 1)
+        let arg = popArgument()
+        let value = try data.readInt(as: T.self, argument: arg, from: data.startIndex + index)
+        if let byteCount = arg.byteCount(), byteCount > 0 {
+            pop(Int(byteCount))
         }
+        return value
     }
 
     @inlinable

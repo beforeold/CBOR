@@ -18,6 +18,10 @@ let package = Package(
                 .product(name: "Collections", package: "swift-collections")
             ]
         ),
+        .executableTarget(
+            name: "Fuzzing",
+            dependencies: ["CBOR"]
+        ),
         .testTarget(
             name: "CBORTests",
             dependencies: ["CBOR"],

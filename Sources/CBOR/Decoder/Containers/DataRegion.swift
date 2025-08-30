@@ -88,34 +88,68 @@ internal extension Slice<UnsafeRawBufferPointer> {
         count >= numBytes
     }
 
+    @inline(__always)
+    @inlinable
+    func canRead(_ numBytes: Int, from index: Index) -> Bool {
+        index + numBytes <= endIndex
+    }
+
     @inlinable
     func readInt<T: FixedWidthInteger>(as: T.Type, argument: UInt8) throws -> T {
+        try readInt(as: T.self, argument: argument, from: startIndex)
+    }
+
+    @inline(__always)
+    @usableFromInline
+    func checkIntConversion<T: FixedWidthInteger, F: FixedWidthInteger>(_ type: T.Type, val: F) throws {
+        guard val <= T.max else {
+            throw ScanError.cannotRepresentInt(max: UInt(T.max), found: UInt(val), offset: startIndex)
+        }
+    }
+
+    @inlinable
+    func readInt<T: FixedWidthInteger>(as: T.Type, argument: UInt8, from index: Index) throws -> T {
         let byteCount = argument
-        return switch byteCount {
+        switch byteCount {
         case let value where value < Constants.maxArgSize:
-            T(value)
+            let intVal = value
+            try checkIntConversion(T.self, val: intVal)
+            return T(intVal)
         case 24:
-            T(try read(as: UInt8.self))
+            let intVal = try read(as: UInt8.self, from: index)
+            try checkIntConversion(T.self, val: intVal)
+            return T(intVal)
         case 25:
-            T(try read(as: UInt16.self))
+            let intVal = try read(as: UInt16.self, from: index)
+            try checkIntConversion(T.self, val: intVal)
+            return T(intVal)
         case 26:
-            T(try read(as: UInt32.self))
+            let intVal = try read(as: UInt32.self, from: index)
+            try checkIntConversion(T.self, val: intVal)
+            return T(intVal)
         case 27:
-            T(try read(as: UInt64.self))
+            let intVal = try read(as: UInt64.self, from: index)
+            try checkIntConversion(T.self, val: intVal)
+            return T(intVal)
         default:
-            throw CBORScanner.ScanError.invalidSize(byte: byteCount, offset: startIndex)
+            throw ScanError.invalidSize(byte: byteCount, offset: startIndex)
         }
     }
 
     @inlinable
     func read<F: FixedWidthInteger>(as: F.Type) throws -> F {
-        guard canRead(F.byteCount) else {
-            throw CBORScanner.ScanError.unexpectedEndOfData
+        try read(as: F.self, from: startIndex)
+    }
+
+    @inlinable
+    func read<F: FixedWidthInteger>(as: F.Type, from index: Index) throws -> F {
+        guard canRead(F.byteCount, from: index) else {
+            throw ScanError.unexpectedEndOfData
         }
         var val = F.zero
         for idx in 0..<(F.byteCount) {
             let shift = (F.byteCount - idx - 1) * 8
-            val |= F(self[startIndex + idx]) << shift
+            val |= F(self[index + idx]) << shift
         }
         return F(val)
     }

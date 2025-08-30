@@ -40,47 +40,63 @@ public struct CBORDecoder {
                 let scanner = CBORScanner(data: reader, options: options)
                 try scanner.scan()
 
+                guard !scanner.isEmpty else {
+                    throw ScanError.unexpectedEndOfData
+                }
+
                 let context = DecodingContext(scanner: scanner)
                 let region = scanner.load(at: 0)
 
                 return try SingleValueCBORDecodingContainer(context: context, data: region).decode(T.self)
             }
         } catch {
-            if let error = error as? CBORScanner.ScanError {
-                switch error {
-                case .unexpectedEndOfData:
-                    throw DecodingError.dataCorrupted(
-                        .init(codingPath: [], debugDescription: "Unexpected end of data.")
-                    )
-                case let .invalidMajorType(byte, offset):
-                    throw DecodingError.dataCorrupted(.init(
-                        codingPath: [],
-                        debugDescription: "Unexpected major type: \(String(byte, radix: 2)) at offset \(offset)"
-                    ))
-                case let .invalidSize(byte, offset):
-                    throw DecodingError.dataCorrupted(.init(
-                        codingPath: [],
-                        debugDescription: "Unexpected size argument: \(String(byte, radix: 2)) at offset \(offset)"
-                    ))
-                case let .expectedMajorType(offset):
-                    throw DecodingError.dataCorrupted(.init(
-                        codingPath: [],
-                        debugDescription: "Expected major type at offset \(offset)"
-                    ))
-                case let .typeInIndeterminateString(type, offset):
-                    throw DecodingError.dataCorrupted(.init(
-                        codingPath: [],
-                        debugDescription: "Unexpected major type in indeterminate \(type) at offset \(offset)"
-                    ))
-                case let .rejectedIndeterminateLength(type, offset):
-                    throw DecodingError.dataCorrupted(.init(
-                        codingPath: [],
-                        debugDescription: "Rejected indeterminate length type \(type) at offset \(offset)"
-                    ))
-                }
+            if let error = error as? ScanError {
+                try throwScanError(error)
             } else {
                 throw error
             }
+        }
+    }
+
+    private func throwScanError(_ error: ScanError) throws -> Never {
+        switch error {
+        case .unexpectedEndOfData:
+            throw DecodingError.dataCorrupted(
+                .init(codingPath: [], debugDescription: "Unexpected end of data.")
+            )
+        case let .invalidMajorType(byte, offset):
+            throw DecodingError.dataCorrupted(.init(
+                codingPath: [],
+                debugDescription: "Unexpected major type: \(String(byte, radix: 2)) at offset \(offset)"
+            ))
+        case let .invalidSize(byte, offset):
+            throw DecodingError.dataCorrupted(.init(
+                codingPath: [],
+                debugDescription: "Unexpected size argument: \(String(byte, radix: 2)) at offset \(offset)"
+            ))
+        case let .expectedMajorType(offset):
+            throw DecodingError.dataCorrupted(.init(
+                codingPath: [],
+                debugDescription: "Expected major type at offset \(offset)"
+            ))
+        case let .typeInIndeterminateString(type, offset):
+            throw DecodingError.dataCorrupted(.init(
+                codingPath: [],
+                debugDescription: "Unexpected major type in indeterminate \(type) at offset \(offset)"
+            ))
+        case let .rejectedIndeterminateLength(type, offset):
+            throw DecodingError.dataCorrupted(.init(
+                codingPath: [],
+                debugDescription: "Rejected indeterminate length type \(type) at offset \(offset)"
+            ))
+        case let .cannotRepresentInt(max, found, offset):
+            throw DecodingError.dataCorrupted(
+                .init(
+                    codingPath: [],
+                    debugDescription: "Failed to decode integer with maximum \(max), "
+                    + "found \(found) at \(offset)"
+                )
+            )
         }
     }
 }

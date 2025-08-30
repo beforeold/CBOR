@@ -34,7 +34,7 @@ struct ScannerTests {
             let data = Array(repeating: UInt8.zero, count: count)
             Data([argument] + data).withUnsafeBytes {
                 let data = $0[...]
-                #expect(throws: CBORScanner.ScanError.self) {
+                #expect(throws: ScanError.self) {
                     try CBORScanner(data: DataReader(data: data)).scan()
                 }
             }
@@ -59,7 +59,7 @@ struct ScannerTests {
             let data = Data([MajorType.nint.bits | argument] + Array(repeating: UInt8.zero, count: count))
             data.withUnsafeBytes {
                 let data = $0[...]
-                #expect(throws: CBORScanner.ScanError.self) {
+                #expect(throws: ScanError.self) {
                     try CBORScanner(data: DataReader(data: data)).scan()
                 }
             }
@@ -77,7 +77,7 @@ struct ScannerTests {
         let data = data.asHexData()
         try data.withUnsafeBytes {
             let data = $0[...]
-            let options = DecodingOptions(rejectIndeterminateLengthMaps: false)
+            let options = DecodingOptions(rejectIndeterminateLengths: false)
             let scanner = CBORScanner(data: DataReader(data: data), options: options)
             try scanner.scan()
             let map = scanner.results.map
@@ -114,7 +114,7 @@ struct ScannerTests {
         let data = "9F9F0203FF9F0405FFFF".asHexData()
         try data.withUnsafeBytes {
             let data = $0[...]
-            let options = DecodingOptions(rejectIndeterminateLengthArrays: false)
+            let options = DecodingOptions(rejectIndeterminateLengths: false)
             let scanner = CBORScanner(data: DataReader(data: data), options: options)
             try scanner.scan()
             let map = scanner.results.map
