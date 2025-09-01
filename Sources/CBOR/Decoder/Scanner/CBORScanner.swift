@@ -16,6 +16,8 @@ enum ScanError: Error {
     case typeInIndeterminateString(type: MajorType, offset: Int)
     case rejectedIndeterminateLength(type: MajorType, offset: Int)
     case cannotRepresentInt(max: UInt, found: UInt, offset: Int)
+    case noTagInformation(tag: UInt, offset: Int)
+    case invalidMajorTypeForTaggedItem(tag: UInt, expected: Set<MajorType>, found: MajorType, offset: Int)
 }
 
 /// # Why Scan?
@@ -32,70 +34,15 @@ enum ScanError: Error {
 ///   take either indeterminate or specific lengths and decode them.
 @usableFromInline
 final class CBORScanner {
-    // MARK: - Results
-
-    /// After the scanner scans, this contains a map that allows the CBOR data to be scanned for values at arbitrary
-    /// positions, keys, etc. The map contents are represented literally as ints for performance but uses the
-    /// following map:
-    /// ```
-    /// enum ScanItem: Int {
-    ///     case map // (childCount: Int, mapCount: Int, offset: Int, byteCount: Int)
-    ///     case array // (childCount: Int, mapCount: Int, offset: Int, byteCount: Int)
-    ///
-    ///     case int // (offset: Int, byteCount: Int)
-    ///     case string
-    ///     case byteString
-    ///     case tagged
-    ///     case simple (byteCount: Int)
-    /// }
-    /// ```
-    struct Results {
-        var map: [Int] = []
-
-        init(dataCount: Int) {
-            self.map = []
-            map.reserveCapacity(dataCount * 4)
-        }
-
-        mutating func recordMapStart(currentByteIndex: Int) -> Int {
-            map.append(MajorType.map.intValue)
-            map.append(0)
-            map.append(map.count + 3)
-            map.append(currentByteIndex)
-            map.append(currentByteIndex)
-            return map.count - 5
-        }
-
-        mutating func recordArrayStart(currentByteIndex: Int) -> Int {
-            map.append(MajorType.array.intValue)
-            map.append(0) // child count
-            map.append(map.count + 3) // map count
-            map.append(currentByteIndex) // start byte
-            map.append(currentByteIndex) // byte count
-            return map.count - 5
-        }
-
-        mutating func recordEnd(childCount: Int, resultLocation: Int, currentByteIndex: Int) {
-            map[resultLocation + 1] = childCount
-            map[resultLocation + 2] = map.count - map[resultLocation + 2]
-            map[resultLocation + 4] = currentByteIndex - map[resultLocation + 4]
-        }
-
-        mutating func recordType(_ type: UInt8, currentByteIndex: Int, length: Int) {
-            map.append(Int(type))
-            map.append(currentByteIndex)
-            map.append(length)
-        }
-
-        mutating func recordSimple(_ type: UInt8, currentByteIndex: Int) {
-            map.append(Int(type))
-            map.append(currentByteIndex)
-        }
-    }
-
     var reader: DataReader
     var results: Results
     let options: DecodingOptions
+
+    let taggedScanMap: [UInt: Set<MajorType>] = [
+        0: [.string],               // Date (string)
+        1: [.uint, .nint, .simple], // Date (epoch)
+        37: [.bytes],               // UUID
+    ]
 
     var isEmpty: Bool {
         results.map.isEmpty
@@ -105,72 +52,6 @@ final class CBORScanner {
         self.reader = data
         self.results = Results(dataCount: data.count)
         self.options = options
-    }
-
-    // MARK: - Load Values
-
-    func load(at mapIndex: Int) -> DataRegion {
-        assert(mapIndex < results.map.count)
-        let byte = UInt8(results.map[mapIndex])
-        let argument = byte & 0b1_1111
-        guard let type = MajorType(rawValue: byte) else {
-            fatalError("Invalid type found in map: \(results.map[mapIndex]) at index: \(mapIndex)")
-        }
-        switch type {
-        case .uint, .nint, .bytes, .string, .tagged:
-            assert(mapIndex + 1 < results.map.count)
-            let location = results.map[mapIndex + 1]
-            let length = results.map[mapIndex + 2]
-            let slice = reader.slice(location..<(location + length))
-            return DataRegion(type: type, argument: argument, childCount: nil, mapOffset: mapIndex, data: slice)
-        case .simple:
-            let length = simpleLength(UInt8(results.map[mapIndex]))
-            let slice: Slice<UnsafeRawBufferPointer>
-            if length == 0 {
-                slice = reader.slice(0..<0)
-            } else {
-                let location = results.map[mapIndex + 1] + 1 // skip type & arg byte.
-                slice = reader.slice(location..<(location + length))
-            }
-            return DataRegion(type: type, argument: argument, childCount: nil, mapOffset: mapIndex, data: slice)
-        case .array, .map:
-            // Map determines the slice size
-            let childCount = results.map[mapIndex + 1]
-            let location = results.map[mapIndex + 3]
-            let length = results.map[mapIndex + 4]
-            let slice = reader.slice(location..<(location + length))
-            return DataRegion(type: type, argument: argument, childCount: childCount, mapOffset: mapIndex, data: slice)
-        }
-    }
-
-    // MARK: - Map Navigation
-
-    func firstChildIndex(_ mapIndex: Int) -> Int {
-        let byte = UInt8(results.map[mapIndex])
-        guard let type = MajorType(rawValue: byte) else {
-            fatalError("Invalid type found in map: \(results.map[mapIndex]) at index: \(mapIndex)")
-        }
-        switch type {
-        case .uint, .nint, .bytes, .string, .tagged, .simple:
-            fatalError("Can't find child index for non-container type.")
-        case .array, .map: // type byte + 4 map values
-            return mapIndex + 5
-        }
-    }
-
-    func siblingIndex(_ mapIndex: Int) -> Int {
-        let byte = UInt8(results.map[mapIndex])
-        guard let type = MajorType(rawValue: byte) else {
-            fatalError("Invalid type found in map: \(results.map[mapIndex]) at index: \(mapIndex)")
-        }
-        switch type {
-        case .uint, .nint, .bytes, .string, .tagged:
-            return mapIndex + 3
-        case .simple:
-            return mapIndex + 2
-        case .array, .map: // Map contains the map/array count
-            return mapIndex + 5 + results.map[mapIndex + 2]
-        }
     }
 
     // MARK: - Scan
@@ -192,13 +73,17 @@ final class CBORScanner {
             }
         }
 
+        try scanType(type: type, raw: raw)
+    }
+
+    private func scanType(type: MajorType, raw: UInt8) throws {
         switch type {
         case .uint, .nint:
             try scanInt(raw: raw)
         case .bytes:
-            try scanBytesOrString(.bytes)
+            try scanBytesOrString(.bytes, raw: raw)
         case .string:
-            try scanBytesOrString(.string)
+            try scanBytesOrString(.string, raw: raw)
         case .array:
             try scanArray()
         case .map:
@@ -206,7 +91,7 @@ final class CBORScanner {
         case .simple:
             try scanSimple(raw: raw)
         case .tagged:
-            throw ScanError.expectedMajorType(offset: 0)
+            try scanTagged(raw: raw)
         }
     }
 
@@ -225,30 +110,15 @@ final class CBORScanner {
     private func scanSimple(raw: UInt8) throws {
         let idx = reader.index
         results.recordSimple(reader.pop(), currentByteIndex: idx)
-        guard reader.canRead(simpleLength(raw)) else {
+        guard reader.canRead(raw.simpleLength()) else {
             throw ScanError.unexpectedEndOfData
         }
-        reader.pop(simpleLength(raw))
-    }
-
-    private func simpleLength(_ arg: UInt8) -> Int {
-        switch arg & 0b11111 {
-        case 25:
-            2 // Half-float
-        case 26:
-            4 // Float
-        case 27:
-            8 // Double
-        default:
-            0 // Just this byte.
-        }
+        reader.pop(raw.simpleLength())
     }
 
     // MARK: - Scan String/Bytes
 
-    private func scanBytesOrString(_ type: MajorType) throws {
-        let raw = reader._peek() // already checked previously
-
+    private func scanBytesOrString(_ type: MajorType, raw: UInt8) throws {
         guard peekIsIndeterminate() else {
             let size = try reader.readNextInt(as: Int.self)
             let offset = reader.index
@@ -345,5 +215,34 @@ final class CBORScanner {
         // Pop the break byte
         reader.pop()
         results.recordEnd(childCount: count, resultLocation: mapIdx, currentByteIndex: reader.index)
+    }
+
+    private func scanTagged(raw: UInt8) throws {
+        guard let size = reader.peekArgument()?.byteCount() else {
+            throw ScanError.invalidSize(byte: reader.peekArgument() ?? .max, offset: reader.index)
+        }
+        let offset = reader.index
+        results.recordType(raw, currentByteIndex: offset, length: Int(size))
+
+        let tag = try reader.readNextInt(as: UInt.self)
+
+        guard let validMajorTypes = taggedScanMap[tag] else {
+            throw ScanError.noTagInformation(tag: tag, offset: reader.index)
+        }
+
+        guard let nextRaw = reader.peek(), let nextTag = MajorType(rawValue: nextRaw) else {
+            throw ScanError.unexpectedEndOfData
+        }
+
+        guard validMajorTypes.contains(nextTag) else {
+            throw ScanError.invalidMajorTypeForTaggedItem(
+                tag: tag,
+                expected: validMajorTypes,
+                found: nextTag,
+                offset: offset
+            )
+        }
+
+        try scanType(type: nextTag, raw: nextRaw)
     }
 }

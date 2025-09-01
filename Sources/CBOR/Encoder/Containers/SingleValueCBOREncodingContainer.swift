@@ -63,10 +63,13 @@ extension SingleValueCBOREncodingContainer: SingleValueEncodingContainer {
         // special encoding cases. It's still lame.
 
         if let date = value as? Date {
-            if options.useStringDates {
+            switch options.dateEncodingStrategy {
+            case .string:
                 parent.register(StringDateOptimizer(value: date))
-            } else {
-                parent.register(EpochDateOptimizer(value: date))
+            case .float:
+                parent.register(EpochFloatDateOptimizer(value: date))
+            case .double:
+                parent.register(EpochDoubleDateOptimizer(value: date))
             }
         } else if let uuid = value as? UUID {
             parent.register(UUIDOptimizer(value: uuid))

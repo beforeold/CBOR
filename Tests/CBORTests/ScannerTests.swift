@@ -22,9 +22,9 @@ struct ScannerTests {
             let map = scanner.results.map
             #expect(map == [Int(MajorType.uint.bits | argument), 1, byteCount])
 
-            #expect(scanner.load(at: 0).type == .uint)
-            #expect(scanner.load(at: 0).argument == argument)
-            #expect(scanner.load(at: 0).count == byteCount)
+            #expect(scanner.results.load(at: 0, reader: scanner.reader).type == .uint)
+            #expect(scanner.results.load(at: 0, reader: scanner.reader).argument == argument)
+            #expect(scanner.results.load(at: 0, reader: scanner.reader).count == byteCount)
         }
     }
 

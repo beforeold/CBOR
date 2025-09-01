@@ -12,17 +12,17 @@ extension CBORScanner: CustomDebugStringConvertible {
         func indent(_ other: String, d: Int) { string += String(repeating: " ", count: d * 2) + other + "\n" }
 
         func gen(_ idx: Int, depth: Int) {
-            let value = load(at: idx)
+            let value = results.load(at: idx, reader: reader)
             switch value.type {
             case .map, .array:
                 indent(
                     "\(value.type), mapIdx: \(value.mapOffset), children: \(value.childCount!), bytes: \(value.count)",
                     d: depth
                 )
-                var idx = firstChildIndex(idx)
+                var idx = results.firstChildIndex(idx)
                 for _ in 0..<value.childCount! {
                     gen(idx, depth: depth + 1)
-                    idx = siblingIndex(idx)
+                    idx = results.siblingIndex(idx)
                 }
             default:
                 indent("\(value.type), mapIdx: \(value.mapOffset), arg: \(value.argument)", d: depth)

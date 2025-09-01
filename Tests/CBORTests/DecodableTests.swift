@@ -218,7 +218,7 @@ struct DecodableTests {
             let context = DecodingContext(scanner: scanner)
             let container = SingleValueCBORDecodingContainer(
                 context: context,
-                data: scanner.load(at: 0)
+                data: scanner.results.load(at: 0, reader: scanner.reader)
             )
 
             var unkeyedContainer = try container.unkeyedContainer()
@@ -265,5 +265,13 @@ struct DecodableTests {
     func emptyData() throws {
         let data = Data()
         #expect(throws: DecodingError.self) { try CBORDecoder().decode(Data.self, from: data) }
+    }
+
+    @Test
+    func date() throws {
+        let data = "C11A5C295C00".asHexData()
+        let expected = Date(timeIntervalSince1970: 1546214400.0)
+        let value = try CBORDecoder().decode(Date.self, from: data)
+        #expect(value == expected)
     }
 }

@@ -113,4 +113,28 @@ struct RoundTripTests {
             #expect(first.name == Person.mock.name)
         }
     }
+
+    @Test
+    func dateEpoch() throws {
+        let value = Date()
+        let encoded = try CBOREncoder().encode(value)
+        let decoded = try CBORDecoder().decode(Date.self, from: encoded)
+        #expect(decoded.timeIntervalSince1970.rounded(.down) == value.timeIntervalSince1970.rounded(.down))
+    }
+
+    @Test
+    func dateString() throws {
+        let value = Date()
+        let encoded = try CBOREncoder(dateEncodingStrategy: .string).encode(value)
+        let decoded = try CBORDecoder().decode(Date.self, from: encoded)
+        #expect(decoded.timeIntervalSince1970.rounded(.down) == value.timeIntervalSince1970.rounded(.down))
+    }
+
+    @Test
+    func uuid() throws {
+        let value = UUID()
+        let encoded = try CBOREncoder().encode(value)
+        let decoded = try CBORDecoder().decode(UUID.self, from: encoded)
+        #expect(decoded == value)
+    }
 }

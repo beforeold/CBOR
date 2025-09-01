@@ -27,7 +27,7 @@ struct StringDateOptimizer: EncodingOptimizer {
     }
 }
 
-struct EpochDateOptimizer: EncodingOptimizer {
+struct EpochDoubleDateOptimizer: EncodingOptimizer {
     var optimizer: DoubleOptimizer
 
     var type: MajorType { .tagged }
@@ -36,6 +36,22 @@ struct EpochDateOptimizer: EncodingOptimizer {
 
     init(value: Date) {
         optimizer = DoubleOptimizer(value: value.timeIntervalSince1970)
+    }
+
+    mutating func writePayload(to data: inout Slice<UnsafeMutableRawBufferPointer>) {
+        optimizer.write(to: &data)
+    }
+}
+
+struct EpochFloatDateOptimizer: EncodingOptimizer {
+    var optimizer: FloatOptimizer
+
+    var type: MajorType { .tagged }
+    var argument: UInt8 { 1 }
+    var contentSize: Int { optimizer.size }
+
+    init(value: Date) {
+        optimizer = FloatOptimizer(value: Float(value.timeIntervalSince1970))
     }
 
     mutating func writePayload(to data: inout Slice<UnsafeMutableRawBufferPointer>) {

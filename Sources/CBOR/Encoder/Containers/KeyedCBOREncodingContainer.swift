@@ -24,7 +24,7 @@ struct KeyedCBOREncodingContainer<
     }
 
     func encode<T>(_ value: T, forKey key: Key) throws where T: Encodable {
-        try value.encode(to: encoder(for: key))
+        try encoder(for: key).encode(value)
     }
 
     mutating func encodeNil(forKey key: Key) throws {

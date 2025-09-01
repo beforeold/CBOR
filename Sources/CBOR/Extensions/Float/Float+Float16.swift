@@ -1,24 +1,26 @@
 //
-//  Float32+Float16.swift
-//  SwiftCBOR
+//  Float+Float16.swift
+//  CBOR
 //
 //  Created by Khan Winter on 8/17/25.
 //
 
-extension Float32 {
+// Copied with modifications from: https://github.com/valpackett/SwiftCBOR
+
+extension Float {
     // https://gist.github.com/martinkallman/5049614
     // rewritten to Swift + applied fixes from comments + added NaN/Inf checks
     // should be good enough, who cares about float16
     @inlinable
-    static func readFloat16(x: UInt16) -> Float32 {
+    init?(halfPrecision x: UInt16) {
         if (x & 0x7fff) > 0x7c00 {
-            return Float32.nan
+            self = .nan
         }
         if x == 0x7c00 {
-            return Float32.infinity
+            self = .infinity
         }
         if x == 0xfc00 {
-            return -Float32.infinity
+            self = -.infinity
         }
         var t1 = UInt32(x & 0x7fff)        // Non-sign bits
         var t2 = UInt32(x & 0x8000)        // Sign bit
@@ -28,6 +30,6 @@ extension Float32 {
         t1 += 0x38000000                   // Adjust bias
         t1 = (t3 == 0 ? 0 : t1)            // Denormals-as-zero
         t1 |= t2                           // Re-insert sign bit
-        return Float32(bitPattern: t1)
+        self = Float(bitPattern: t1)
     }
 }

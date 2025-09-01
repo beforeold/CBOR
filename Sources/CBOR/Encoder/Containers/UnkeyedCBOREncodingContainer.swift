@@ -22,18 +22,7 @@ struct UnkeyedCBOREncodingContainer<ParentStorage: TemporaryEncodingStorage>: Un
     }
 
     func encode<T: Encodable>(_ value: T) throws {
-        try value.encode(
-            to: SingleValueCBOREncodingContainer(parent: storage.forAppending(), context: nextContext())
-        )
-    }
-
-    func encode(_ value: UInt8) throws {
-        storage.data.append(value)
-        if !context.options.assumeUInt8IsByteString {
-            try value.encode(
-                to: SingleValueCBOREncodingContainer(parent: storage.forAppending(), context: nextContext())
-            )
-        }
+        try SingleValueCBOREncodingContainer(parent: storage.forAppending(), context: nextContext()).encode(value)
     }
 
     mutating func encodeNil() throws {
@@ -64,7 +53,6 @@ extension UnkeyedCBOREncodingContainer {
 
         let parent: ParentStorage
         var items: [EncodingOptimizer] = []
-        var data: [UInt8] = []
 
         init(parent: ParentStorage) {
             self.parent = parent
@@ -86,19 +74,7 @@ extension UnkeyedCBOREncodingContainer {
         }
 
         deinit {
-            // Swift doesn't give us a good way to detect a 'byte string'. So, we record both UInt8 values and
-            // some optimizers. At this point, we can check if we're encoding either a collection of multiple
-            // types (items.count > data.count), or a pure data collection (data.count == items.count).
-            // This is terrible in terms of memory use, but lets us encode byte strings using the most optimal
-            // encoding method.
-            // CBOR also mandates that an empty collection is by default an array, so we check if this is empty.
-            // Frankly, this blows and I wish Swift's Codable API was even a smidgen less fucked.
-
-            if items.count <= data.count && !data.isEmpty {
-                parent.register(ByteStringOptimizer(value: data))
-            } else {
-                parent.register(UnkeyedOptimizer(value: items))
-            }
+            parent.register(UnkeyedOptimizer(value: items))
         }
     }
 

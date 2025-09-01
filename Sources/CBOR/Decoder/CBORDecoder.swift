@@ -45,7 +45,7 @@ public struct CBORDecoder {
                 }
 
                 let context = DecodingContext(scanner: scanner)
-                let region = scanner.load(at: 0)
+                let region = scanner.results.load(at: 0, reader: scanner.reader)
 
                 return try SingleValueCBORDecodingContainer(context: context, data: region).decode(T.self)
             }
@@ -97,6 +97,8 @@ public struct CBORDecoder {
                     + "found \(found) at \(offset)"
                 )
             )
+        case .noTagInformation, .invalidMajorTypeForTaggedItem:
+            throw error // rethrow these guys
         }
     }
 }

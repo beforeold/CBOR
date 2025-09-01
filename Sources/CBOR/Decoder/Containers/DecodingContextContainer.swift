@@ -21,7 +21,7 @@ extension DecodingContextContainer {
     @discardableResult
     func checkType<T>( _ types: MajorType..., arguments: UInt8..., as: T.Type) throws -> UInt8 {
         guard types.contains(data.type) else {
-            throw DecodingError.typeMismatch(Bool.self, context.error("Unexpected type found: \(data.type)."))
+            throw DecodingError.typeMismatch(T.self, context.error("Unexpected type found: \(data.type)."))
         }
 
         let argument = data.argument // Already checked with type()
