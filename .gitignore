@@ -26,3 +26,7 @@ xcuserdata
 
 Carthage/
 .swiftpm/
+
+.fuzz/new-corpus
+
+fuzz-*.log
