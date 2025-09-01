@@ -9,7 +9,7 @@
 public struct EncodingOptions {
     /// Force encoded maps to use string keys even when integer keys are available.
     public let forceStringKeys: Bool
-    
+
     /// Methods for encoding dates.
     public enum DateStrategy {
         /// Encodes dates as `ISO8601` date strings under tag `0`.

@@ -96,7 +96,13 @@ extension CBORScanner {
                 let location = map[mapIndex + 3]
                 let length = map[mapIndex + 4]
                 let slice = reader.slice(location..<(location + length))
-                return DataRegion(type: type, argument: argument, childCount: childCount, mapOffset: mapIndex, data: slice)
+                return DataRegion(
+                    type: type,
+                    argument: argument,
+                    childCount: childCount,
+                    mapOffset: mapIndex,
+                    data: slice
+                )
             }
         }
 

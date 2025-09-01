@@ -6,7 +6,8 @@
 //
 
 /// Represents a major type as described by the CBOR specification.
-@frozen public enum MajorType: UInt8, Sendable, Hashable, Equatable {
+@frozen
+public enum MajorType: UInt8, Sendable, Hashable, Equatable {
     case uint = 0
     case nint = 1
     case bytes = 2
