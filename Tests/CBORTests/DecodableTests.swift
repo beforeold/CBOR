@@ -9,9 +9,6 @@ import Testing
 import Foundation
 @testable import CBOR
 
- @_optimize(none)
- public func blackHole(_: some Any) {}
-
 @Suite
 struct DecodableTests {
     @Test
