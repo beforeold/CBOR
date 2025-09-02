@@ -3,6 +3,8 @@ import Benchmark
 import SwiftCBOR
 import CBOR
 
+typealias EncoderObject = CBOREncoder
+
 let benchmarks: @Sendable () -> Void = {
     struct Person: Codable {
         let name: String
@@ -30,7 +32,7 @@ let benchmarks: @Sendable () -> Void = {
             tags: ["swift", "cbor", "benchmark"]
         )
 
-        let encoder = CBOREncoder()
+        let encoder = EncoderObject()
         benchmark.startMeasurement()
         let data = try encoder.encode(person)
         blackHole(data)
@@ -54,7 +56,7 @@ let benchmarks: @Sendable () -> Void = {
             metadata: ["industry": "tech", "location": "remote"]
         )
 
-        let encoder = CBOREncoder()
+        let encoder = EncoderObject()
         benchmark.startMeasurement()
         let data = try encoder.encode(company)
         blackHole(data)
@@ -64,7 +66,7 @@ let benchmarks: @Sendable () -> Void = {
 
     Benchmark("String") { benchmark in
         let string = String(repeating: "a", count: 1000)
-        let encoder = CBOREncoder()
+        let encoder = EncoderObject()
         benchmark.startMeasurement()
         let data = try encoder.encode(string)
         blackHole(data)
@@ -74,7 +76,7 @@ let benchmarks: @Sendable () -> Void = {
 
     Benchmark("String Small") { benchmark in
         let stringSmall = "abc"
-        let encoder = CBOREncoder()
+        let encoder = EncoderObject()
         benchmark.startMeasurement()
         let data = try encoder.encode(stringSmall)
         blackHole(data)
@@ -84,7 +86,7 @@ let benchmarks: @Sendable () -> Void = {
 
     Benchmark("Data") { benchmark in
         let dataVal = Data(repeating: 0x42, count: 1024)
-        let encoder = CBOREncoder()
+        let encoder = EncoderObject()
         benchmark.startMeasurement()
         let data = try encoder.encode(dataVal)
         blackHole(data)
@@ -94,7 +96,7 @@ let benchmarks: @Sendable () -> Void = {
 
     Benchmark("Data Small") { benchmark in
         let dataSmall = Data([0x01, 0x02, 0x03])
-        let encoder = CBOREncoder()
+        let encoder = EncoderObject()
         benchmark.startMeasurement()
         let data = try encoder.encode(dataSmall)
         blackHole(data)
@@ -104,7 +106,7 @@ let benchmarks: @Sendable () -> Void = {
 
     Benchmark("Dictionary") { benchmark in
         let dict = ["key": "value", "foo": "bar", "baz": "qux"]
-        let encoder = CBOREncoder()
+        let encoder = EncoderObject()
         benchmark.startMeasurement()
         let data = try encoder.encode(dict)
         blackHole(data)
@@ -114,7 +116,7 @@ let benchmarks: @Sendable () -> Void = {
 
     Benchmark("Dictionary Small") { benchmark in
         let dictSmall = ["a": "b"]
-        let encoder = CBOREncoder()
+        let encoder = EncoderObject()
         benchmark.startMeasurement()
         let data = try encoder.encode(dictSmall)
         blackHole(data)
@@ -124,7 +126,7 @@ let benchmarks: @Sendable () -> Void = {
 
     Benchmark("Array") { benchmark in
         let array = Array(0..<1000)
-        let encoder = CBOREncoder()
+        let encoder = EncoderObject()
         benchmark.startMeasurement()
         let data = try encoder.encode(array)
         blackHole(data)
@@ -134,7 +136,7 @@ let benchmarks: @Sendable () -> Void = {
 
     Benchmark("Array Small") { benchmark in
         let arraySmall = [1, 2, 3]
-        let encoder = CBOREncoder()
+        let encoder = EncoderObject()
         benchmark.startMeasurement()
         let data = try encoder.encode(arraySmall)
         blackHole(data)
@@ -144,7 +146,7 @@ let benchmarks: @Sendable () -> Void = {
 
     Benchmark("Int") { benchmark in
         let intVal = 1234567891011
-        let encoder = CBOREncoder()
+        let encoder = EncoderObject()
         benchmark.startMeasurement()
         let data = try encoder.encode(intVal)
         blackHole(data)
@@ -154,7 +156,7 @@ let benchmarks: @Sendable () -> Void = {
 
     Benchmark("Int Small") { benchmark in
         let intValSmall = 42
-        let encoder = CBOREncoder()
+        let encoder = EncoderObject()
         benchmark.startMeasurement()
         let data = try encoder.encode(intValSmall)
         blackHole(data)
@@ -164,7 +166,7 @@ let benchmarks: @Sendable () -> Void = {
 
     Benchmark("Bool") { benchmark in
         let boolVal = true
-        let encoder = CBOREncoder()
+        let encoder = EncoderObject()
         benchmark.startMeasurement()
         let data = try encoder.encode(boolVal)
         blackHole(data)

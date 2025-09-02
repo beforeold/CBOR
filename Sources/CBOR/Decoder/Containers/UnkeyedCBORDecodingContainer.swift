@@ -25,17 +25,17 @@ struct UnkeyedCBORDecodingContainer: DecodingContextContainer, UnkeyedDecodingCo
         try checkType(.array)
         guard let childCount = data.childCount else { fatalError("Array scanned but no child count recorded.") }
         self.count = childCount
-        self.currentMapIndex = context.scanner.results.firstChildIndex(data.mapOffset)
+        self.currentMapIndex = context.results.firstChildIndex(data.mapOffset)
     }
 
     /// Consumes one decoder off the scanned array.
     private mutating func consumeDecoder() throws -> SingleValueCBORDecodingContainer {
         defer {
             currentIndex += 1
-            currentMapIndex = context.scanner.results.siblingIndex(currentMapIndex)
+            currentMapIndex = context.results.siblingIndex(currentMapIndex)
         }
 
-        let region = context.scanner.results.load(at: currentMapIndex, reader: context.scanner.reader)
+        let region = context.results.load(at: currentMapIndex)
         return SingleValueCBORDecodingContainer(
             context: context.appending(UnkeyedCodingKey(intValue: currentIndex)),
             data: region
@@ -43,7 +43,7 @@ struct UnkeyedCBORDecodingContainer: DecodingContextContainer, UnkeyedDecodingCo
     }
 
     mutating func decodeNil() throws -> Bool {
-        context.scanner.results.load(at: currentMapIndex, reader: context.scanner.reader).isNil()
+        context.results.load(at: currentMapIndex).isNil()
     }
 
     mutating func decode<T: Decodable>(_ type: T.Type) throws -> T {

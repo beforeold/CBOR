@@ -22,11 +22,21 @@ extension CBORScanner {
     /// }
     /// ```
     struct Results {
-        var map: [Int] = []
+        private var map: [Int] = []
+        private var reader: DataReader
 
-        init(dataCount: Int) {
+        var isEmpty: Bool {
+            map.isEmpty
+        }
+
+        func contents() -> [Int] {
+            map
+        }
+
+        init(dataCount: Int, reader: DataReader) {
             self.map = []
-            map.reserveCapacity(dataCount * 4)
+//            map.reserveCapacity(dataCount * 4)
+            self.reader = reader
         }
 
         mutating func recordMapStart(currentByteIndex: Int) -> Int {
@@ -66,7 +76,7 @@ extension CBORScanner {
 
         // MARK: - Load Values
 
-        func load(at mapIndex: Int, reader: DataReader) -> DataRegion {
+        func load(at mapIndex: Int) -> DataRegion {
             assert(mapIndex < map.count)
             let byte = UInt8(map[mapIndex])
             let argument = byte & 0b1_1111
@@ -139,8 +149,8 @@ extension CBORScanner {
             }
         }
 
-        func loadTagData(tagMapIndex mapIndex: Int, reader: DataReader) -> DataRegion {
-            return load(at: mapIndex + 3, reader: reader)
+        func loadTagData(tagMapIndex mapIndex: Int) -> DataRegion {
+            return load(at: mapIndex + 3)
         }
     }
 }

@@ -38,14 +38,14 @@ public struct CBORDecoder {
                 let data = $0[...]
                 let reader = DataReader(data: data)
                 let scanner = CBORScanner(data: reader, options: options)
-                try scanner.scan()
+                let results = try scanner.scan()
 
-                guard !scanner.isEmpty else {
+                guard !results.isEmpty else {
                     throw ScanError.unexpectedEndOfData
                 }
 
-                let context = DecodingContext(scanner: scanner)
-                let region = scanner.results.load(at: 0, reader: scanner.reader)
+                let context = DecodingContext(options: options, results: results)
+                let region = results.load(at: 0)
 
                 return try SingleValueCBORDecodingContainer(context: context, data: region).decode(T.self)
             }

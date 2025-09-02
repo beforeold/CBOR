@@ -7,6 +7,12 @@
 
 import Foundation
 
+private let taggedScanMap: [UInt: Set<MajorType>] = [
+    0: [.string],               // Date (string)
+    1: [.uint, .nint, .simple], // Date (epoch)
+    37: [.bytes],               // UUID
+]
+
 @usableFromInline
 enum ScanError: Error {
     case unexpectedEndOfData
@@ -33,38 +39,29 @@ enum ScanError: Error {
 /// - This is where we do any indeterminate length validation and rejection. The decoder containers themselves will
 ///   take either indeterminate or specific lengths and decode them.
 @usableFromInline
-final class CBORScanner {
-    var reader: DataReader
-    var results: Results
-    let options: DecodingOptions
-
-    let taggedScanMap: [UInt: Set<MajorType>] = [
-        0: [.string],               // Date (string)
-        1: [.uint, .nint, .simple], // Date (epoch)
-        37: [.bytes],               // UUID
-    ]
-
-    var isEmpty: Bool {
-        results.map.isEmpty
-    }
+struct CBORScanner {
+    private var reader: DataReader
+    private var results: Results
+    private let options: DecodingOptions
 
     init(data: DataReader, options: DecodingOptions = DecodingOptions()) {
         self.reader = data
-        self.results = Results(dataCount: data.count)
+        self.results = Results(dataCount: data.count, reader: reader)
         self.options = options
     }
 
     // MARK: - Scan
 
-    func scan() throws {
+    consuming func scan() throws -> Results {
         while !reader.isEmpty {
             let idx = reader.index
             try scanNext()
             assert(idx < reader.index, "Scanner made no forward progress in scan")
         }
+        return results
     }
 
-    private func scanNext() throws {
+    private mutating func scanNext() throws {
         guard let type = reader.peekType(), let raw = reader.peek() else {
             if reader.isEmpty {
                 throw ScanError.unexpectedEndOfData
@@ -76,7 +73,7 @@ final class CBORScanner {
         try scanType(type: type, raw: raw)
     }
 
-    private func scanType(type: MajorType, raw: UInt8) throws {
+    private mutating func scanType(type: MajorType, raw: UInt8) throws {
         switch type {
         case .uint, .nint:
             try scanInt(raw: raw)
@@ -97,7 +94,7 @@ final class CBORScanner {
 
     // MARK: - Scan Int
 
-    private func scanInt(raw: UInt8) throws {
+    private mutating func scanInt(raw: UInt8) throws {
         let size = try popByteCount()
         let offset = reader.index
         results.recordType(raw, currentByteIndex: offset, length: size)
@@ -107,7 +104,7 @@ final class CBORScanner {
 
     // MARK: - Scan Simple
 
-    private func scanSimple(raw: UInt8) throws {
+    private mutating func scanSimple(raw: UInt8) throws {
         let idx = reader.index
         results.recordSimple(reader.pop(), currentByteIndex: idx)
         guard reader.canRead(raw.simpleLength()) else {
@@ -118,7 +115,7 @@ final class CBORScanner {
 
     // MARK: - Scan String/Bytes
 
-    private func scanBytesOrString(_ type: MajorType, raw: UInt8) throws {
+    private mutating func scanBytesOrString(_ type: MajorType, raw: UInt8) throws {
         guard peekIsIndeterminate() else {
             let size = try reader.readNextInt(as: Int.self)
             let offset = reader.index
@@ -155,7 +152,7 @@ final class CBORScanner {
 
     // MARK: - Scan Array
 
-    private func scanArray() throws {
+    private mutating func scanArray() throws {
         guard peekIsIndeterminate() else {
             let size = try reader.readNextInt(as: Int.self)
             let mapIdx = results.recordArrayStart(currentByteIndex: reader.index)
@@ -184,7 +181,7 @@ final class CBORScanner {
 
     // MARK: - Scan Map
 
-    private func scanMap() throws {
+    private mutating func scanMap() throws {
         guard peekIsIndeterminate() else {
             let keyCount = try reader.readNextInt(as: Int.self)
             guard keyCount < Int.max / 2 else {
@@ -217,7 +214,9 @@ final class CBORScanner {
         results.recordEnd(childCount: count, resultLocation: mapIdx, currentByteIndex: reader.index)
     }
 
-    private func scanTagged(raw: UInt8) throws {
+    // MARK: - Scan Tagged
+
+    private mutating func scanTagged(raw: UInt8) throws {
         guard let size = reader.peekArgument()?.byteCount() else {
             throw ScanError.invalidSize(byte: reader.peekArgument() ?? .max, offset: reader.index)
         }
@@ -244,5 +243,24 @@ final class CBORScanner {
         }
 
         try scanType(type: nextTag, raw: nextRaw)
+    }
+}
+
+extension CBORScanner {
+    private mutating func popByteCount() throws -> Int {
+        let byteCount = reader.popArgument()
+        return switch byteCount {
+        case let value where value < Constants.maxArgSize: 0
+        case 24: 1
+        case 25: 2
+        case 26: 4
+        case 27: 8
+        default:
+            throw ScanError.invalidSize(byte: byteCount, offset: reader.index - 1)
+        }
+    }
+
+    private func peekIsIndeterminate() -> Bool {
+        (reader.peekArgument() ?? 0) == 0b1_1111
     }
 }

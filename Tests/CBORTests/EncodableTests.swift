@@ -229,33 +229,3 @@ struct EncodableTests {
         #expect(data == "1907CF".asHexData())
     }
 }
-
-extension Array {
-    func chunked(into size: Int) -> [[Element]] {
-        stride(from: 0, to: count, by: size).map {
-            Array(self[$0 ..< Swift.min($0 + size, count)])
-        }
-    }
-}
-
-extension String {
-    func asHexData() -> Data {
-        guard self.count.isMultiple(of: 2) else {
-            fatalError()
-        }
-
-        let chars = self.map { $0 }
-        let bytes = stride(from: 0, to: chars.count, by: 2)
-            .map { String(chars[$0]) + String(chars[$0 + 1]) }
-            .compactMap { UInt8($0, radix: 16) }
-
-        guard self.count / bytes.count == 2 else { fatalError() }
-        return Data(bytes)
-    }
-}
-
-extension Data {
-    func hexString() -> String {
-        map { String(format: "%02hhX", $0) }.joined()
-    }
-}

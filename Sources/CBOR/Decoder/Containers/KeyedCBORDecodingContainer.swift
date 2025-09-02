@@ -46,9 +46,9 @@ struct KeyedCBORDecodingContainer<Key: CodingKey>: DecodingContextContainer, Key
         guard let childCount = data.childCount else { fatalError("Map scanned but no child count recorded.") }
         decodedKeys.reserveCapacity(childCount / 2)
 
-        var mapOffset = context.scanner.results.firstChildIndex(data.mapOffset)
+        var mapOffset = context.results.firstChildIndex(data.mapOffset)
         for _ in 0..<childCount / 2 {
-            let key = context.scanner.results.load(at: mapOffset, reader: context.scanner.reader)
+            let key = context.results.load(at: mapOffset)
             let decodedKey: AnyKey
             switch key.type {
             case .uint, .nint:
@@ -63,10 +63,10 @@ struct KeyedCBORDecodingContainer<Key: CodingKey>: DecodingContextContainer, Key
                     context.error("Invalid key type found in map. Found \(key.type), expected an integer or string.")
                 )
             }
-            mapOffset = context.scanner.results.siblingIndex(mapOffset)
+            mapOffset = context.results.siblingIndex(mapOffset)
 
-            let value = context.scanner.results.load(at: mapOffset, reader: context.scanner.reader)
-            mapOffset = context.scanner.results.siblingIndex(mapOffset)
+            let value = context.results.load(at: mapOffset)
+            mapOffset = context.results.siblingIndex(mapOffset)
 
             decodedKeys[decodedKey] = value
         }

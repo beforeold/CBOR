@@ -3,6 +3,8 @@ import Benchmark
 import CBOR
 //import SwiftCBOR
 
+typealias DecoderObject = CBORDecoder
+
 extension String {
     func asHexData() -> Data {
         guard self.count.isMultiple(of: 2) else {
@@ -23,14 +25,14 @@ let benchmarks: @Sendable () -> Void =  {
     // MARK: - Int
 
     Benchmark("Int") { benchmark in
-        let decoder = CBORDecoder()
+        let decoder = DecoderObject()
         let data = Data([27, 1, 0, 0, 39, 10, 0, 2, 1])
         benchmark.startMeasurement()
         blackHole(try decoder.decode(Int.self, from: data))
     }
 
     Benchmark("Int Small") { benchmark in
-        let decoder = CBORDecoder()
+        let decoder = DecoderObject()
         let data = Data([0])
         benchmark.startMeasurement()
         blackHole(try decoder.decode(Int.self, from: data))
@@ -38,17 +40,17 @@ let benchmarks: @Sendable () -> Void =  {
 
     // MARK: - String
 
-//    Benchmark("String") { benchmark in
-//        let data = "6b68656c6c6f20776f726c64".asHexData()
-//        let decoder = CBORDecoder()
-//        benchmark.startMeasurement()
-//        blackHole(try decoder.decode(String.self, from: data))
-//    }
-//
-//    Benchmark("String Small") { benchmark in
-//        let decoder = CBORDecoder()
-//        let data = "60".asHexData()
-//        benchmark.startMeasurement()
-//        blackHole(try decoder.decode(String.self, from: data))
-//    }
+    Benchmark("String") { benchmark in
+        let data = "6b68656c6c6f20776f726c64".asHexData()
+        let decoder = DecoderObject()
+        benchmark.startMeasurement()
+        blackHole(try decoder.decode(String.self, from: data))
+    }
+
+    Benchmark("String Small") { benchmark in
+        let decoder = DecoderObject()
+        let data = "60".asHexData()
+        benchmark.startMeasurement()
+        blackHole(try decoder.decode(String.self, from: data))
+    }
 }

@@ -9,28 +9,28 @@ import Testing
 import Foundation
 @testable import CBOR
 
-// @_optimize(none)
-// public func blackHole(_: some Any) {}
+ @_optimize(none)
+ public func blackHole(_: some Any) {}
 
 @Suite
 struct DecodableTests {
     @Test
     func uint8() throws {
-        var value: UInt8 = 0 // try CBORDecoder().decode(UInt8.self, from: [0])
-//        #expect(value == 0)
-//        value = try CBORDecoder().decode(UInt8.self, from: [1])
-//        #expect(value == 1)
-//        // Just below max arg size
-//        value = try CBORDecoder().decode(UInt8.self, from: [23])
-//        #expect(value == 23)
+        var value: UInt8 = try CBORDecoder().decode(UInt8.self, from: [0])
+        #expect(value == 0)
+        value = try CBORDecoder().decode(UInt8.self, from: [1])
+        #expect(value == 1)
+        // Just below max arg size
+        value = try CBORDecoder().decode(UInt8.self, from: [23])
+        #expect(value == 23)
         // Just above max arg size
         value = try CBORDecoder().decode(UInt8.self, from: [24, 24])
         #expect(value == 24)
         // Max Int
-//        value = try CBORDecoder().decode(UInt8.self, from: [24, UInt8.max])
-//        #expect(value == UInt8.max)
-//
-//        #expect(throws: DecodingError.self) { try CBORDecoder().decode(UInt8.self, from: [128]) }
+        value = try CBORDecoder().decode(UInt8.self, from: [24, UInt8.max])
+        #expect(value == UInt8.max)
+
+        #expect(throws: DecodingError.self) { try CBORDecoder().decode(UInt8.self, from: [128]) }
     }
 
     @Test
@@ -212,13 +212,14 @@ struct DecodableTests {
         try data.withUnsafeBytes {
             let data = $0[...]
             let reader = DataReader(data: data)
-            let scanner = CBORScanner(data: reader, options: DecodingOptions(rejectIndeterminateLengths: false))
-            try scanner.scan()
+            let options = DecodingOptions(rejectIndeterminateLengths: false)
+            let scanner = CBORScanner(data: reader, options: options)
+            let results = try scanner.scan()
 
-            let context = DecodingContext(scanner: scanner)
+            let context = DecodingContext(options: options, results: results)
             let container = SingleValueCBORDecodingContainer(
                 context: context,
-                data: scanner.results.load(at: 0, reader: scanner.reader)
+                data: results.load(at: 0)
             )
 
             var unkeyedContainer = try container.unkeyedContainer()

@@ -136,10 +136,7 @@ extension SingleValueCBORDecodingContainer: SingleValueDecodingContainer {
     }
 
     private func decodeStringDate() throws -> Date {
-        let taggedData = context.scanner.results.loadTagData(
-            tagMapIndex: data.mapOffset,
-            reader: context.scanner.reader
-        )
+        let taggedData = context.results.loadTagData(tagMapIndex: data.mapOffset)
         let string = try SingleValueCBORDecodingContainer(context: context, data: taggedData).decode(String.self)
         guard let date = ISO8601DateFormatter().date(from: string) else {
             throw DecodingError.dataCorrupted(context.error("Failed to decode date from \"\(string)\""))
@@ -149,10 +146,7 @@ extension SingleValueCBORDecodingContainer: SingleValueDecodingContainer {
 
     private func decodeEpochDate() throws -> Date {
         // Epoch Timestamp, can be a floating point or positive/negative integer value
-        let taggedData = context.scanner.results.loadTagData(
-            tagMapIndex: data.mapOffset,
-            reader: context.scanner.reader
-        )
+        let taggedData = context.results.loadTagData(tagMapIndex: data.mapOffset)
         switch (taggedData.type, taggedData.argument) {
         case (.uint, _):
             let int = try taggedData.readInt(as: Int.self)
@@ -178,10 +172,7 @@ extension SingleValueCBORDecodingContainer: SingleValueDecodingContainer {
 
     private func _decode(_: UUID.Type) throws -> UUID {
         try checkType(.tagged, arguments: 24, as: UUID.self)
-        let taggedData = context.scanner.results.loadTagData(
-            tagMapIndex: data.mapOffset,
-            reader: context.scanner.reader
-        )
+        let taggedData = context.results.loadTagData(tagMapIndex: data.mapOffset)
         let data = try SingleValueCBORDecodingContainer(context: context, data: taggedData).decode(Data.self)
         guard data.count == 16 else { // UUID size + tag
             throw DecodingError.dataCorruptedError(

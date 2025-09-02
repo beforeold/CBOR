@@ -18,13 +18,13 @@ struct ScannerTests {
             let data = $0[...]
 
             let scanner = CBORScanner(data: DataReader(data: data))
-            try scanner.scan()
-            let map = scanner.results.map
+            let results = try scanner.scan()
+            let map = results.contents()
             #expect(map == [Int(MajorType.uint.bits | argument), 1, byteCount])
 
-            #expect(scanner.results.load(at: 0, reader: scanner.reader).type == .uint)
-            #expect(scanner.results.load(at: 0, reader: scanner.reader).argument == argument)
-            #expect(scanner.results.load(at: 0, reader: scanner.reader).count == byteCount)
+            #expect(results.load(at: 0).type == .uint)
+            #expect(results.load(at: 0).argument == argument)
+            #expect(results.load(at: 0).count == byteCount)
         }
     }
 
@@ -47,8 +47,8 @@ struct ScannerTests {
         try data.withUnsafeBytes {
             let data = $0[...]
             let scanner = CBORScanner(data: DataReader(data: data))
-            try scanner.scan()
-            let map = scanner.results.map
+            let results = try scanner.scan()
+            let map = results.contents()
             #expect(map == [Int(MajorType.nint.bits | argument), 1, byteCount])
         }
     }
@@ -79,8 +79,8 @@ struct ScannerTests {
             let data = $0[...]
             let options = DecodingOptions(rejectIndeterminateLengths: false)
             let scanner = CBORScanner(data: DataReader(data: data), options: options)
-            try scanner.scan()
-            let map = scanner.results.map
+            let results = try scanner.scan()
+            let map = results.contents()
             #expect(map == expectedMap)
         }
     }
@@ -102,8 +102,8 @@ struct ScannerTests {
         try data.withUnsafeBytes {
             let data = $0[...]
             let scanner = CBORScanner(data: DataReader(data: data))
-            try scanner.scan()
-            let map = scanner.results.map
+            let results = try scanner.scan()
+            let map = results.contents()
             #expect(map == expectedMap)
         }
     }
@@ -116,8 +116,8 @@ struct ScannerTests {
             let data = $0[...]
             let options = DecodingOptions(rejectIndeterminateLengths: false)
             let scanner = CBORScanner(data: DataReader(data: data), options: options)
-            try scanner.scan()
-            let map = scanner.results.map
+            let results = try scanner.scan()
+            let map = results.contents()
             #expect(map == expectedMap)
         }
     }
