@@ -228,4 +228,22 @@ struct EncodableTests {
         let data = try encoder.encode(1999)
         #expect(data == "1907CF".asHexData())
     }
+
+    @Test(
+        .disabled("Disabled until we can figure out how to make Float16 compile on all platforms."),
+        arguments: [
+            ("F90000", 0),
+            ("F93C00", 1.0),
+            ("F9BE00", -1.5),
+            ("F97C00", .infinity),
+            ("F93E32", 1.548828125),
+            ("F9F021", -8456)
+        ]
+    )
+    func halfFloat(expected: String, value: Float16) throws {
+        let expectedData = expected.asHexData()
+        let encoder = CBOREncoder()
+        let data = try encoder.encode(value)
+        #expect(data == expectedData)
+    }
 }

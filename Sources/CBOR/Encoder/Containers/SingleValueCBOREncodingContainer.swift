@@ -61,21 +61,25 @@ extension SingleValueCBOREncodingContainer: SingleValueEncodingContainer {
         // I hate this conditional cast, but Swift forces us to do this because Codable can't implement a specialized
         // function for any type, only the standard library types. This is the same method Foundation uses to detect
         // special encoding cases. It's still lame.
-
-        if let date = value as? Date {
+        switch value {
+        case let value as Date:
             switch options.dateEncodingStrategy {
             case .string:
-                parent.register(StringDateOptimizer(value: date))
+                parent.register(StringDateOptimizer(value: value))
             case .float:
-                parent.register(EpochFloatDateOptimizer(value: date))
+                parent.register(EpochFloatDateOptimizer(value: value))
             case .double:
-                parent.register(EpochDoubleDateOptimizer(value: date))
+                parent.register(EpochDoubleDateOptimizer(value: value))
             }
-        } else if let uuid = value as? UUID {
-            parent.register(UUIDOptimizer(value: uuid))
-        } else if let data = value as? Data {
-            parent.register(ByteStringOptimizer(value: data))
-        } else {
+        case let value as UUID:
+            parent.register(UUIDOptimizer(value: value))
+        case let value as Data:
+            parent.register(ByteStringOptimizer(value: value))
+// #if canImport(Float16)
+//        case let value as Float16:
+//            parent.register(Float16Optimizer(value: value))
+// #endif
+        default:
             try value.encode(to: self)
         }
     }
