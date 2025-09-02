@@ -272,4 +272,18 @@ struct DecodableTests {
         let value = try CBORDecoder().decode(Date.self, from: data)
         #expect(value == expected)
     }
+
+    @Test(arguments: [
+        ("F90000", 0),
+        ("F93C00", 1.0),
+        ("F9BE00", -1.5),
+        ("F97C00", .infinity),
+        ("F93E32", 1.548828125),
+        ("F9F021", -8456)
+    ])
+    func float16(data: String, value: Float) throws {
+        let data = data.asHexData()
+        let decoded = try CBORDecoder().decode(Float.self, from: data)
+        #expect(decoded == value)
+    }
 }

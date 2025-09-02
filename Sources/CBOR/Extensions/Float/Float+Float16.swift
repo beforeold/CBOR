@@ -15,12 +15,15 @@ extension Float {
     init?(halfPrecision x: UInt16) {
         if (x & 0x7fff) > 0x7c00 {
             self = .nan
+            return
         }
         if x == 0x7c00 {
             self = .infinity
+            return
         }
         if x == 0xfc00 {
             self = -.infinity
+            return
         }
         var t1 = UInt32(x & 0x7fff)        // Non-sign bits
         var t2 = UInt32(x & 0x8000)        // Sign bit
