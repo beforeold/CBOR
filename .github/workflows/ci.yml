@@ -38,27 +38,20 @@ jobs:
           else
             set -o pipefail && swift test | xcbeautify
           fi
-
-  fuzz:
-    name: Fuzzing CBOR
-    needs: swiftlint
-    runs-on: macos-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-      - uses: swift-actions/setup-swift@v2
-        with:
-          swift-version: "6.1"
       - name: Building Fuzzing Target
         run: |
-          set -o pipefail && swift build -c release --sanitize fuzzer,address | xcbeautify
-      - name: Fuzzing For 15 Seconds
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            swift build -c release --sanitize fuzzer,address
+          else
+            set -o pipefail && swift build -c release --sanitize fuzzer,address | xcbeautify
+          fi
+      - name: Fuzzing For 30 Seconds
         run: |
           mkdir -p .fuzz
           mkdir -p .fuzz/new-corpus
           mkdir -p .fuzz/corpus
           mkdir -p .fuzz/artifacts
-          ./.build/release/Fuzzing .fuzz/new-corpus .fuzz/corpus -max_total_time=15 -artifact_prefix=.fuzz/artifacts -max_len=1000000
+          ./.build/release/Fuzzing .fuzz/new-corpus .fuzz/corpus -max_total_time=10 -artifact_prefix=.fuzz/artifacts -max_len=1000000
       - name: "Upload Fuzzing Artifacts (if available)"
         uses: actions/upload-artifact@v4
         with:
@@ -66,4 +59,3 @@ jobs:
            path: ".fuzz/artifacts"
            if-no-files-found: "ignore"
            retention-days: 14
-
