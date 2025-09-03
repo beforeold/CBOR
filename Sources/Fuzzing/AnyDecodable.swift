@@ -4,7 +4,9 @@
 // swiftlint:disable line_length
 // swiftlint:disable type_name
 
-#if canImport(Foundation)
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
 #endif
 
@@ -58,11 +60,7 @@ extension _AnyDecodable {
         let container = try decoder.singleValueContainer()
 
         if container.decodeNil() {
-            #if canImport(Foundation)
-                self.init(NSNull())
-            #else
-                self.init(Optional<Self>.none)
-            #endif
+            self.init(Optional<Self>.none)
         } else if let bool = try? container.decode(Bool.self) {
             self.init(bool)
         } else if let int = try? container.decode(Int.self) {
@@ -86,10 +84,8 @@ extension _AnyDecodable {
 extension AnyDecodable: Equatable {
     static func == (lhs: AnyDecodable, rhs: AnyDecodable) -> Bool {
         switch (lhs.value, rhs.value) {
-#if canImport(Foundation)
-        case is (NSNull, NSNull), is (Void, Void):
+        case (Optional<Self>.none, Optional<Self>.none), is (Void, Void):
             return true
-#endif
         case let (lhs as Bool, rhs as Bool):
             return lhs == rhs
         case let (lhs as Int, rhs as Int):

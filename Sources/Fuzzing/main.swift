@@ -6,7 +6,11 @@
 //
 
 import CBOR
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 @_optimize(none)
 func blackhole(_ val: some Any) { }

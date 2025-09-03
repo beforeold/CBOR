@@ -5,7 +5,11 @@
 //  Created by Khan Winter on 8/20/25.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 struct KeyedCBORDecodingContainer<Key: CodingKey>: DecodingContextContainer, KeyedDecodingContainerProtocol {
     enum AnyKey: Hashable {

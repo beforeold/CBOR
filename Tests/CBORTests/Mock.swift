@@ -5,7 +5,11 @@
 //  Created by Khan Winter on 8/27/25.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 struct Person: Codable {
     let name: String

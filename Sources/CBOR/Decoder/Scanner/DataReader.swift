@@ -5,7 +5,11 @@
 //  Created by Khan Winter on 8/20/25.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// A mutable struct used by the `CBORScanner` to iteratively scan a CBOR blob.
 /// Since this isn't passed by reference, this represents the *entire* blob instead of a single value

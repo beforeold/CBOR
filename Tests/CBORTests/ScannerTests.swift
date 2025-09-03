@@ -5,7 +5,11 @@
 //  Created by Khan Winter on 8/24/25.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Testing
 @testable import CBOR
 

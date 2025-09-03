@@ -19,7 +19,11 @@ struct StringDateOptimizer: EncodingOptimizer {
     var contentSize: Int { optimizer.size }
 
     init(value: Date) {
+        #if canImport(FoundationEssentials)
+        optimizer = SmallStringOptimizer(value: value.ISO8601Format().utf8)
+        #else
         optimizer = SmallStringOptimizer(value: ISO8601DateFormatter().string(from: value).utf8)
+        #endif
     }
 
     mutating func writePayload(to data: inout Slice<UnsafeMutableRawBufferPointer>) {

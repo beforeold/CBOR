@@ -5,7 +5,11 @@
 //  Created by Khan Winter on 8/20/25.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 struct SingleValueCBORDecodingContainer: DecodingContextContainer {
     let context: DecodingContext
@@ -138,9 +142,15 @@ extension SingleValueCBORDecodingContainer: SingleValueDecodingContainer {
     private func decodeStringDate() throws -> Date {
         let taggedData = context.results.loadTagData(tagMapIndex: data.mapOffset)
         let string = try SingleValueCBORDecodingContainer(context: context, data: taggedData).decode(String.self)
+#if canImport(FoundationEssentials)
+        guard let date = try? Date.ISO8601FormatStyle().parse(string) else {
+            throw DecodingError.dataCorrupted(context.error("Failed to decode date from \"\(string)\""))
+        }
+#else
         guard let date = ISO8601DateFormatter().date(from: string) else {
             throw DecodingError.dataCorrupted(context.error("Failed to decode date from \"\(string)\""))
         }
+#endif
         return date
     }
 
