@@ -19,6 +19,21 @@
 
 The motivation for this library over existing implementations is twofold: performance, and reliability. Existing community implementations do not make correct use of Swift features like `Optional` and memory safety. This library aims to be safe while still outperforming other implementations. To that end, this library has been extensively [fuzz tested](./Fuzz.md) to ensure your application never crashes due to malicious input. At the same time, this library boasts up to a *74% faster* encoding and up to *89% faster* decoding than existing implementations. See [benchmarks](#benchmarks) for more details.
 
+## Features
+
+- `Codable` API for familiar Swift project integration.
+- Customizable encoding options, such as date and key formatting.
+- Customizable decoding, with the ability to reject non-deterministic CBOR data.
+- Encoder creates deterministic CBOR data by default.
+- A scan pass allows for decoding only the keys you need from an encoded object.
+- Supports decoding half precision floats (Float16) as a regular Float.
+- Runs on Linux, Android, and Windows using the swift-foundation project when available.
+- Fuzz tested for reliability against crashes.
+- Supports tagged items (will expand and add ability to inject your own tags in the future):
+  - Dates
+  - UUIDs
+- Flexible date parsing (tags `0` or `1` with support for any numeric value representation).
+
 ## Usage
 
 This library utilizes Swift's `Codable` API for all (de)serialization operations. It intentionally doesn't support streaming CBOR blobs. After [installing](#installation) the package using Swift Package Manager, use the `CBOREncoder` and `CBORDecoder` types to encode to and decode from CBOR blobs, respectively.
