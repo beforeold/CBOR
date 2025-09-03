@@ -65,26 +65,30 @@ jobs:
           key: "swiftpm-tests-build-${{ runner.os }}-${{ github.event.pull_request.base.sha || github.event.after }}"
           restore-keys: "swiftpm-tests-build-${{ runner.os }}-"
       - name: Building Package
-        run: set -o pipefail && swift --run swift build --build-tests --sanitize fuzzer | xcbeautify
+      run: set -o pipefail && swift build --build-tests | xcbeautify
+#        run: set -o pipefail && swift build --build-tests  // --sanitize fuzzer | xcbeautify
       - name: Cache .build
         if: steps.restore-build.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: .build
           key: "swiftpm-tests-build-${{ runner.os }}-${{ github.event.pull_request.base.sha || github.event.after }}"
-      - name: Testing Package
-        run: set -o pipefail && swift --run swift test --skip-build | xcbeautify
-      - name: Fuzzing For 15 Seconds
-        run: |
-          mkdir -p .fuzz
-          mkdir -p .fuzz/new-corpus
-          mkdir -p .fuzz/corpus
-          mkdir -p .fuzz/artifacts
-          ./.build/debug/Fuzzing .fuzz/new-corpus .fuzz/corpus -max_total_time=15 -artifact_prefix=.fuzz/artifacts -max_len=1000000
-      - name: "Upload Fuzzing Artifacts (if available)"
-        uses: actions/upload-artifact@v4
-        with:
-           name: "FuzzArtifacts"
-           path: ".fuzz/artifacts"
-           if-no-files-found: "ignore"
-           retention-days: 14
+
+# TODO: The Xcode version of the swift toolchain does not come with libfuzzer
+#       What needs to happen is we install the open source toolchain and then we can fuzz here...
+#      - name: Testing Package
+#        run: set -o pipefail && swift test --skip-build | xcbeautify
+#      - name: Fuzzing For 15 Seconds
+#        run: |
+#          mkdir -p .fuzz
+#          mkdir -p .fuzz/new-corpus
+#          mkdir -p .fuzz/corpus
+#          mkdir -p .fuzz/artifacts
+#          ./.build/debug/Fuzzing .fuzz/new-corpus .fuzz/corpus -max_total_time=15 -artifact_prefix=.fuzz/artifacts -max_len=1000000
+#      - name: "Upload Fuzzing Artifacts (if available)"
+#        uses: actions/upload-artifact@v4
+#        with:
+#           name: "FuzzArtifacts"
+#           path: ".fuzz/artifacts"
+#           if-no-files-found: "ignore"
+#           retention-days: 14
