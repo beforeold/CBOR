@@ -7,7 +7,7 @@
 
 [CBOR](https://cbor.io/) is a flexible data format that emphasizes extremely small code size, small message size, and extendability. This library provides a Swift API for encoding and decoding Swift types using the CBOR serialization format. 
 
-The motivation for this library over existing implementations is twofold: performance, and reliability. Existing community implementations do not make correct use of Swift features like `Optional` and memory safety. This library aims to be safe while still outperforming other implementations. To that end, this library has been extensively [fuzz tested](./Fuzzing.md) to ensure your application never crashes due to malicious input. At the same time, this library boasts up to a *74% faster* encoding and up to *89% faster* decoding than existing implementations. See [benchmarks](#benchmarks) for more details.
+The motivation for this library over existing implementations is twofold: performance, and reliability. Existing community implementations do not make correct use of Swift features like `Optional` and memory safety. This library aims to be safe while still outperforming other implementations. To that end, this library has been extensively [fuzz tested](./Fuzz.md) to ensure your application never crashes due to malicious input. At the same time, this library boasts up to a *74% faster* encoding and up to *89% faster* decoding than existing implementations. See [benchmarks](#benchmarks) for more details.
 
 ## Usage
 
@@ -78,36 +78,36 @@ These benchmarks range from simple to complex encoding and decoding operations c
 
 | Benchmark | SwiftCBOR (ns, p50) | CBOR (ns, p50) | % Improvement |
 |-----------|----------------|-----------|------------|
-| Array | 23 | 7 | **69.57%** |
-| Complex Object | 700,000 | 74,000 | **89.43%** |
-| Date | 5,211 | 1,042 | **80.00%** |
-| Dictionary | 17 | 5 | **70.59%** |
-| Double | 5,251 | 1,000 | **80.96%** |
-| Float | 5,251 | 1,000 | **80.96%** |
-| Indeterminate String | 6,251 | 1,375 | **78.00%** |
-| Int | 5,211 | 1,124 | **78.43%** |
-| Int Small | 5,167 | 1,083 | **79.04%** |
-| Simple Object | 36 | 8 | **77.78%** |
-| String | 5,419 | 1,251 | **76.91%** |
-| String Small | 5,251 | 1,125 | **78.58%** |
+| Array | 23 | 7 | **70%** |
+| Complex Object | 703 μs | 75 μs | **89%** |
+| Date | 5,251 | 1,083 | **79%** |
+| Dictionary | 17 | 5 | **71%** |
+| Double | 5,295 | 1,001 | **81%** |
+| Float | 5,295 | 1,000 | **81%** |
+| Indeterminate String | 6,251 | 1,417 | **77%** |
+| Int | 5,211 | 1,125 | **78%** |
+| Int Small | 5,211 | 1,083 | **79%** |
+| Simple Object | 36 | 8 | **78%** |
+| String | 5,459 | 1,292 | **76%** |
+| String Small | 5,291 | 1,126 | **79%** |
 
 ### Encoding (cpu time)
 
-| Benchmark | SwiftCBOR (ns, p50) | CBOR (ns, p50) | % Improvement |
+| Benchmark | SwiftCBOR (ns,  p50) | CBOR (ns, p50) | % Improvement |
 |-----------|----------------|-----------|------------|
-| Array | 666,000 | 471,000 | **29.28%** |
-| Array Small | 7,003 | 2,875 | **58.95%** |
-| Bool | 3,167 | 1,124 | **64.51%** |
-| Complex Codable Object | 124,000 | 92,000 | **25.81%** |
-| Data | 5,295 | 1,208 | **77.19%** |
-| Data Small | 3,917 | 959 | **75.52%** |
-| Dictionary | 11 | 5 | **54.55%** |
-| Dictionary Small | 7,419 | 2,875 | **61.25%** |
-| Int | 3,959 | 1,291 | **67.39%** |
-| Int Small | 3,793 | 1,208 | **68.15%** |
-| Simple Codable Object | 18 | 9 | **50.00%** |
-| String | 5,543 | 1,250 | **77.45%** |
-| String Small | 4,001 | 1,125 | **71.88%** |
+| Array | 669 μs | 471 μs | **30%** |
+| Array Small | 7,043 | 2,917 | **59%** |
+| Bool | 3,169 | 1,125 | **64%** |
+| Complex Codable Object | 124 μs | 92 μs | **26%** |
+| Data | 5,335 | 1,250 | **77%** |
+| Data Small | 3,959 | 1000 | **75%** |
+| Dictionary | 11 | 5 | **55%** |
+| Dictionary Small | 7,459 | 2,959 | **60%** |
+| Int | 4,001 | 1,292 | **68%** |
+| Int Small | 3,833 | 1,208 | **68%** |
+| Simple Codable Object | 18 | 9 | **50%** |
+| String | 5,583 | 1,291 | **77%** |
+| String Small | 4,041 | 1,125 | **72%** |
 
 ## Contributing
 

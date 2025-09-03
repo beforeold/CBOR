@@ -1,3 +1,5 @@
+# I'd love for this to work but it's not quite right right now. The table in the README is copied manually.
+
 import re
 
 def to_ns(val, unit):
