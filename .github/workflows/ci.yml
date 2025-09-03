@@ -73,11 +73,10 @@ jobs:
         with:
           path: .build
           key: "swiftpm-tests-build-${{ runner.os }}-${{ github.event.pull_request.base.sha || github.event.after }}"
-
+      - name: Testing Package
+        run: set -o pipefail && swift test --skip-build | xcbeautify
 # TODO: The Xcode version of the swift toolchain does not come with libfuzzer
 #       What needs to happen is we install the open source toolchain and then we can fuzz here...
-#      - name: Testing Package
-#        run: set -o pipefail && swift test --skip-build | xcbeautify
 #      - name: Fuzzing For 15 Seconds
 #        run: |
 #          mkdir -p .fuzz
