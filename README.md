@@ -25,6 +25,9 @@ The motivation for this library over existing implementations is twofold: perfor
 - Customizable encoding options, such as date and key formatting.
 - Customizable decoding, with the ability to reject non-deterministic CBOR data.
 - Encoder creates deterministic CBOR data by default.
+  - Dictionaries are automatically sorted using a min heap for speed.
+  - Duplicate map keys are removed.
+  - Never creates non-deterministic collections (Strings, Byte Strings, Arrays, or Maps).
 - A scan pass allows for decoding only the keys you need from an encoded object.
 - Supports decoding half precision floats (Float16) as a regular Float.
 - Runs on Linux, Android, and Windows using the swift-foundation project when available.
@@ -33,6 +36,8 @@ The motivation for this library over existing implementations is twofold: perfor
   - Dates
   - UUIDs
 - Flexible date parsing (tags `0` or `1` with support for any numeric value representation).
+
+> Note: This is not a valid CBOR/CDE encoder, it merely always outputs countable collections. CBOR/CDE should be implemented in the future as it's quite similar.
 
 ## Usage
 
