@@ -3,9 +3,11 @@
   <h1 align="center">CBOR</h1>
 </p>
 
-<div align="center">
-  <a href="">![CI Status](https://img.shields.io/github/actions/workflow/status/thecoolwinter/CBOR/ci.yml)</a>
-</div>
+<p align="center">
+  <a aria-label="CI Status" href="" target="_blank">
+    <img alt="" src="https://img.shields.io/github/actions/workflow/status/thecoolwinter/CBOR/ci.yml">
+  </a>
+</p>
 
 [CBOR](https://cbor.io/) is a flexible data format that emphasizes extremely small code size, small message size, and extendability. This library provides a Swift API for encoding and decoding Swift types using the CBOR serialization format. 
 
