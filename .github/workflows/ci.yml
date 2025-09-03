@@ -18,13 +18,11 @@ jobs:
         with:
           version: latest
 
-  test:
-    name: Testing CBOR
+  test-linux:
+    name: Testing CBOR (ubuntu)
     needs: swiftlint
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    container: swift:6.1-noble
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -32,19 +30,23 @@ jobs:
         with:
           swift-version: "6.1"
       - name: Testing Package
-        run: |
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            swift test
-          else
-            set -o pipefail && swift test | xcbeautify
-          fi
+        run: swift test
+
+  test-macos:
+    name: Testing and Fuzzing CBOR (macOS)
+    needs: swiftlint
+    runs-on: macos-latest
+    container: swift:6.1-noble
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - uses: swift-actions/setup-swift@next
+        with:
+          swift-version: "6.1"
+      - name: Testing Package
+        run: set -o pipefail && swift test | xcbeautify
       - name: Building Fuzzing Target
-        run: |
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            swift build -c release --sanitize fuzzer,address
-          else
-            set -o pipefail && swift build -c release --sanitize fuzzer,address | xcbeautify
-          fi
+        run: set -o pipefail && swift build -c release --sanitize fuzzer,address | xcbeautify
       - name: Fuzzing For 30 Seconds
         run: |
           mkdir -p .fuzz
