@@ -29,8 +29,23 @@ jobs:
       - uses: swift-actions/setup-swift@v2
         with:
           swift-version: "6.1"
+      - name: Restore .build
+        id: "restore-build"
+        uses: actions/cache/restore@v4
+        with:
+          path: .build
+          key: "swiftpm-tests-build-${{ runner.os }}-${{ github.event.pull_request.base.sha || github.event.after }}"
+          restore-keys: "swiftpm-tests-build-${{ runner.os }}-"
       - name: Testing Package
-        run: swift test
+        run: swift build --build-tests
+      - name: Cache .build
+        if: steps.restore-build.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .build
+          key: "swiftpm-tests-build-${{ runner.os }}-${{ github.event.pull_request.base.sha || github.event.after }}"
+      - name: Testing Package
+        run: swift test --skip-build
 
   test-macos:
     name: Testing and Fuzzing CBOR (macOS)
@@ -42,17 +57,30 @@ jobs:
       - uses: swift-actions/setup-swift@next
         with:
           swift-version: "6.1"
+      - name: Restore .build
+        id: "restore-build"
+        uses: actions/cache/restore@v4
+        with:
+          path: .build
+          key: "swiftpm-tests-build-${{ runner.os }}-${{ github.event.pull_request.base.sha || github.event.after }}"
+          restore-keys: "swiftpm-tests-build-${{ runner.os }}-"
+      - name: Building Package
+        run: set -o pipefail && xcrun --toolchain swift 6.1 --run swift build --build-tests --sanitize fuzzer | xcbeautify
+      - name: Cache .build
+        if: steps.restore-build.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: .build
+          key: "swiftpm-tests-build-${{ runner.os }}-${{ github.event.pull_request.base.sha || github.event.after }}"
       - name: Testing Package
-        run: set -o pipefail && swift test | xcbeautify
-      - name: Building Fuzzing Target
-        run: set -o pipefail && swift build -c release --sanitize fuzzer,address | xcbeautify
-      - name: Fuzzing For 30 Seconds
+        run: set -o pipefail && xcrun --toolchain swift 6.1 --run swift test --skip-build | xcbeautify
+      - name: Fuzzing For 15 Seconds
         run: |
           mkdir -p .fuzz
           mkdir -p .fuzz/new-corpus
           mkdir -p .fuzz/corpus
           mkdir -p .fuzz/artifacts
-          ./.build/release/Fuzzing .fuzz/new-corpus .fuzz/corpus -max_total_time=10 -artifact_prefix=.fuzz/artifacts -max_len=1000000
+          ./.build/debug/Fuzzing .fuzz/new-corpus .fuzz/corpus -max_total_time=15 -artifact_prefix=.fuzz/artifacts -max_len=1000000
       - name: "Upload Fuzzing Artifacts (if available)"
         uses: actions/upload-artifact@v4
         with:
