@@ -7,6 +7,12 @@
   <a aria-label="CI Status" href="" target="_blank">
     <img alt="" src="https://img.shields.io/github/actions/workflow/status/thecoolwinter/CBOR/ci.yml">
   </a>
+  <a aria-label="Swift Version Compatibility" href="https://swiftpackageindex.com/thecoolwinter/CBOR" target="_blank">
+    <img alt="" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fthecoolwinter%2FCBOR%2Fbadge%3Ftype%3Dswift-versions">
+  </a>
+  <a aria-label="Platform Compatibility" href="https://swiftpackageindex.com/thecoolwinter/CBOR" target="_blank">
+    <img alt="" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fthecoolwinter%2FCBOR%2Fbadge%3Ftype%3Dplatforms">
+  </a>
 </p>
 
 [CBOR](https://cbor.io/) is a flexible data format that emphasizes extremely small code size, small message size, and extendability. This library provides a Swift API for encoding and decoding Swift types using the CBOR serialization format. 
