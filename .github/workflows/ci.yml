@@ -42,9 +42,9 @@ jobs:
           mkdir -p .fuzz/corpus
           mkdir -p .fuzz/artifacts
           ./.build/release/Fuzzing .fuzz/new-corpus .fuzz/corpus -max_total_time=30 -artifact_prefix=.fuzz/artifacts -max_len=1000000
-       - name: "Upload Fuzzing Artifacts (if available)"
-         uses: actions/upload-artifact@v4
-         with:
+      - name: "Upload Fuzzing Artifacts (if available)"
+        uses: actions/upload-artifact@v4
+        with:
            name: "FuzzArtifacts"
            path: ".fuzz/artifacts"
            if-no-files-found: "ignore"
