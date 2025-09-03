@@ -25,19 +25,12 @@ public struct EncodingOptions {
     /// Determine how to encode dates.
     public let dateEncodingStrategy: DateStrategy
 
-    /// Codable can't tell us if we're encoding a Data or [UInt8] object. By default this library assumes that if it's
-    /// encoding an unkeyed container or UInt8 objects it's a byte string. Toggle this to false to disable this.
-    /// **This will slow down all Data encoding operations dramatically**.
-    public let assumeUInt8IsByteString: Bool
-
     /// Initialize new encoding options.
     /// - Parameters:
     ///   - forceStringKeys: Force encoded maps to use string keys even when integer keys are available.
     ///   - useStringDates: See ``dateEncodingStrategy`` and ``DateStrategy``.
-    ///   - assumeUInt8IsByteString: See ``assumeUInt8IsByteString``.
-    public init(forceStringKeys: Bool, dateEncodingStrategy: DateStrategy, assumeUInt8IsByteString: Bool) {
+    public init(forceStringKeys: Bool, dateEncodingStrategy: DateStrategy) {
         self.forceStringKeys = forceStringKeys
         self.dateEncodingStrategy = dateEncodingStrategy
-        self.assumeUInt8IsByteString = assumeUInt8IsByteString
     }
 }

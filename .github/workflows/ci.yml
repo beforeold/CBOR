@@ -1,0 +1,51 @@
+name: CI
+on: 
+  pull_request:
+    branches: 
+      - 'main'
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
+jobs:
+  swiftlint:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - name: Lint Package
+        uses: cirruslabs/swiftlint-action@v1
+        with:
+          version: latest
+
+  test:
+    name: Testing CBOR
+    needs: swiftlint
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.0"
+      - name: Testing Package
+        run: set -o pipefail && swift test | xcbeautify
+      - name: Building Fuzzing Target
+        run: swift build -c release --sanitize fuzzer,address
+      - name: Fuzzing For 30 Seconds
+        run: |
+          mkdir -p .fuzz
+          mkdir -p .fuzz/new-corpus
+          mkdir -p .fuzz/corpus
+          mkdir -p .fuzz/artifacts
+          ./.build/release/Fuzzing .fuzz/new-corpus .fuzz/corpus -max_total_time=30 -artifact_prefix=.fuzz/artifacts -max_len=1000000
+       - name: "Upload Fuzzing Artifacts (if available)"
+         uses: actions/upload-artifact@v4
+         with:
+           name: "FuzzArtifacts"
+           path: ".fuzz/artifacts"
+           if-no-files-found: "ignore"
+           retention-days: 14

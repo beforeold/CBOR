@@ -15,7 +15,7 @@ import Foundation
 ///
 /// To perform serialization, use the ``encode(_:)-6zhmp`` method to convert a Codable object to ``Data``. To
 /// configure encoding behavior, either pass customization options in with
-/// ``init(forceStringKeys:useStringDates:assumeUInt8IsByteString:)`` or modify ``options``.
+/// ``init(forceStringKeys:dateEncodingStrategy:)`` or modify ``options``.
 public struct CBOREncoder {
     /// Options that determine the behavior of ``CBOREncoder``.
     public var options: EncodingOptions
@@ -24,17 +24,20 @@ public struct CBOREncoder {
     /// - Parameters:
     ///   - forceStringKeys: See ``EncodingOptions/forceStringKeys``.
     ///   - dateEncodingStrategy: See ``EncodingOptions/dateEncodingStrategy``.
-    ///   - assumeUInt8IsByteString: See ``EncodingOptions/assumeUInt8IsByteString``.
     public init(
         forceStringKeys: Bool = false,
         dateEncodingStrategy: EncodingOptions.DateStrategy = .double,
-        assumeUInt8IsByteString: Bool = true
     ) {
         options = EncodingOptions(
             forceStringKeys: forceStringKeys,
-            dateEncodingStrategy: dateEncodingStrategy,
-            assumeUInt8IsByteString: assumeUInt8IsByteString
+            dateEncodingStrategy: dateEncodingStrategy
         )
+    }
+
+    /// Create a new CBOR encoder
+    /// - Parameter options: The encoding options to use.
+    public init(options: EncodingOptions) {
+        self.options = options
     }
 
     /// Returns a CBOR-encoded representation of the value you supply.

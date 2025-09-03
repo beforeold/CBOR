@@ -18,12 +18,18 @@ public struct CBORDecoder {
     /// The options that determine decoding behavior.
     public var options: DecodingOptions
 
-    /// Creates a new decoder.
+    /// Create a new CBOR decoder.
     /// - Parameter rejectIndeterminateLengths: Set to `false` to allow indeterminate length objects to be decoded.
     ///                                         Defaults to *rejecting* indeterminate length items (strings, bytes,
     ///                                         maps, and arrays).
     public init(rejectIndeterminateLengths: Bool = true) {
         self.options = DecodingOptions(rejectIndeterminateLengths: rejectIndeterminateLengths)
+    }
+
+    /// Create a new CBOR decoder
+    /// - Parameter options: The decoding options to use.
+    public init(options: DecodingOptions) {
+        self.options = options
     }
 
     /// Decodes the given type from CBOR binary data.
