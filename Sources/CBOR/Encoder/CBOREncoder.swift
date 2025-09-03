@@ -26,7 +26,7 @@ public struct CBOREncoder {
     ///   - dateEncodingStrategy: See ``EncodingOptions/dateEncodingStrategy``.
     public init(
         forceStringKeys: Bool = false,
-        dateEncodingStrategy: EncodingOptions.DateStrategy = .double,
+        dateEncodingStrategy: EncodingOptions.DateStrategy = .double
     ) {
         options = EncodingOptions(
             forceStringKeys: forceStringKeys,

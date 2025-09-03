@@ -24,7 +24,7 @@ let package = Package(
         ),
         .testTarget(
             name: "CBORTests",
-            dependencies: ["CBOR"],
+            dependencies: ["CBOR"]
         )
     ]
 )
