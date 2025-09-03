@@ -36,7 +36,6 @@ jobs:
     name: Testing and Fuzzing CBOR (macOS)
     needs: swiftlint
     runs-on: macos-latest
-    container: swift:6.1-noble
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
