@@ -36,6 +36,7 @@ The motivation for this library over existing implementations is twofold: perfor
   - Dates
   - UUIDs
 - Flexible date parsing (tags `0` or `1` with support for any numeric value representation).
+- Decoding multiple top-level objects using `decodeMultiple(_:from:)`.
 
 > Note: This is not a valid CBOR/CDE encoder, it merely always outputs countable collections. CBOR/CDE should be implemented in the future as it's quite similar.
 
@@ -75,7 +76,7 @@ let options = DecodingOptions(/* ... */)
 let decoder = CBORDecoder(options: options)
 ```
 
-[Documentation](https://swiftpackageindex.com/thecoolwinter/CBOR/1.0.0/documentation/cbor) is hosted on the Swift Package Index.
+[Documentation](https://swiftpackageindex.com/thecoolwinter/CBOR/1.0.1/documentation/cbor) is hosted on the Swift Package Index.
 
 ## Installation
 
