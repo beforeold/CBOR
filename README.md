@@ -75,7 +75,7 @@ let options = DecodingOptions(/* ... */)
 let decoder = CBORDecoder(options: options)
 ```
 
-[Documentation]() is hosted on the Swift Package Index.
+[Documentation](https://swiftpackageindex.com/thecoolwinter/CBOR/1.0.0/documentation/cbor) is hosted on the Swift Package Index.
 
 ## Installation
 
