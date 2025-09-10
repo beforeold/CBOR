@@ -25,6 +25,10 @@ extension CBORScanner {
         private var map: [Int] = []
         private var reader: DataReader
 
+        var count: Int {
+            map.count
+        }
+
         var isEmpty: Bool {
             map.isEmpty
         }

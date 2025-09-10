@@ -26,6 +26,9 @@ public func fuzz(_ start: UnsafeRawPointer, _ count: Int) -> CInt {
     func tryDecode<T: Decodable>(_ type: T.Type) {
         do {
             blackhole(try CBORDecoder(rejectIndeterminateLengths: false).decode(T.self, from: data))
+            blackhole(try CBORDecoder(rejectIndeterminateLengths: true).decode(T.self, from: data))
+            blackhole(try CBORDecoder(rejectIndeterminateLengths: false).decodeMultiple(T.self, from: data))
+            blackhole(try CBORDecoder(rejectIndeterminateLengths: true).decodeMultiple(T.self, from: data))
         } catch {
             // ignore decode errors
         }

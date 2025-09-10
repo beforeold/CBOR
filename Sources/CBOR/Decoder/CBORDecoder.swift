@@ -68,6 +68,56 @@ public struct CBORDecoder {
         }
     }
 
+    /// Decodes multiple instances of the given type from CBOR binary data.
+    ///
+    /// Some BLOBs are made up of multiple CBOR-encoded datas concatenated without valid CBOR dividers (eg in an array
+    /// container). This method decodes that kind of data. It will attempt to decode an instance of the given type,
+    /// once done, if there's more data, it will continue to attempt to decode more instances.
+    ///
+    /// - Parameters:
+    ///   - type: The decodable type to deserialize.
+    ///   - data: The CBOR data to decode from.
+    /// - Returns: An instance of the decoded type.
+    /// - Throws: A ``DecodingError`` with context and a debug description for a failed deserialization operation.
+    public func decodeMultiple<T: Decodable>(_ type: T.Type, from data: Data) throws -> [T] {
+        do {
+            return try data.withUnsafeBytes {
+                let data = $0[...]
+                let reader = DataReader(data: data)
+                let scanner = CBORScanner(data: reader, options: options)
+                let results = try scanner.scan()
+
+                guard !results.isEmpty else {
+                    throw ScanError.unexpectedEndOfData
+                }
+
+                let context = DecodingContext(options: options, results: results)
+                var nextRegion: DataRegion? = results.load(at: 0)
+
+                var accumulator: [T] = []
+
+                while let region = nextRegion {
+                    let value = try SingleValueCBORDecodingContainer(context: context, data: region).decode(T.self)
+                    accumulator.append(value)
+                    let nextMapIndex = results.siblingIndex(region.mapOffset)
+                    if nextMapIndex < results.count {
+                        nextRegion = results.load(at: results.siblingIndex(region.mapOffset))
+                    } else {
+                        nextRegion = nil
+                    }
+                }
+
+                return accumulator
+            }
+        } catch {
+            if let error = error as? ScanError {
+                try throwScanError(error)
+            } else {
+                throw error
+            }
+        }
+    }
+
     private func throwScanError(_ error: ScanError) throws -> Never {
         switch error {
         case .unexpectedEndOfData:
