@@ -129,19 +129,30 @@ extension SingleValueCBORDecodingContainer: SingleValueDecodingContainer {
         return string
     }
 
+    // Attempt first to decode a tagged date value, then move on and try decoding any of the following as a date:
+    // - Int
+    // - Float/Double/Float16
+    // - ISO String
     private func _decode(_: Date.Type) throws -> Date {
-        let argument = try checkType(.tagged, arguments: 0, 1, as: Date.self)
-        if argument == 0 {
-            // String
-            return try decodeStringDate()
-        } else {
-            return try decodeEpochDate()
+        if let argument = try? checkType(.tagged, arguments: 0, 1, as: Date.self) {
+            let taggedData = context.results.loadTagData(tagMapIndex: data.mapOffset)
+            if argument == 0 {
+                // String
+                return try decodeStringDate(data: taggedData)
+            } else {
+                return try decodeEpochDate(data: taggedData)
+            }
         }
+
+        let region = context.results.load(at: data.mapOffset)
+        guard let date = (try? decodeStringDate(data: region)) ?? (try? decodeEpochDate(data: region)) else {
+            throw DecodingError.typeMismatch(Date.self, context.error("Failed to decode a valid `Date` value."))
+        }
+        return date
     }
 
-    private func decodeStringDate() throws -> Date {
-        let taggedData = context.results.loadTagData(tagMapIndex: data.mapOffset)
-        let string = try SingleValueCBORDecodingContainer(context: context, data: taggedData).decode(String.self)
+    private func decodeStringDate(data: DataRegion) throws -> Date {
+        let string = try SingleValueCBORDecodingContainer(context: context, data: data).decode(String.self)
 #if canImport(FoundationEssentials)
         guard let date = try? Date.ISO8601FormatStyle().parse(string) else {
             throw DecodingError.dataCorrupted(context.error("Failed to decode date from \"\(string)\""))
@@ -154,28 +165,27 @@ extension SingleValueCBORDecodingContainer: SingleValueDecodingContainer {
         return date
     }
 
-    private func decodeEpochDate() throws -> Date {
+    private func decodeEpochDate(data: DataRegion) throws -> Date {
         // Epoch Timestamp, can be a floating point or positive/negative integer value
-        let taggedData = context.results.loadTagData(tagMapIndex: data.mapOffset)
-        switch (taggedData.type, taggedData.argument) {
+        switch (data.type, data.argument) {
         case (.uint, _):
-            let int = try taggedData.readInt(as: Int.self)
+            let int = try data.readInt(as: Int.self)
             return Date(timeIntervalSince1970: Double(int))
         case (.nint, _):
-            let int = -1 - (try taggedData.readInt(as: Int.self))
+            let int = -1 - (try data.readInt(as: Int.self))
             return Date(timeIntervalSince1970: Double(int))
         case (.simple, 25), (.simple, 26):
             // Float
-            let float = try SingleValueCBORDecodingContainer(context: context, data: taggedData).decode(Float.self)
+            let float = try SingleValueCBORDecodingContainer(context: context, data: data).decode(Float.self)
             return Date(timeIntervalSince1970: Double(float))
         case (.simple, 27):
             // Double
-            let double = try SingleValueCBORDecodingContainer(context: context, data: taggedData).decode(Double.self)
+            let double = try SingleValueCBORDecodingContainer(context: context, data: data).decode(Double.self)
             return Date(timeIntervalSince1970: double)
         default:
             throw DecodingError.typeMismatch(
                 Date.self,
-                context.error("Invalid type found for epoch date: \(taggedData.type) at \(taggedData.globalIndex)")
+                context.error("Invalid type found for epoch date: \(data.type) at \(data.globalIndex)")
             )
         }
     }
