@@ -66,7 +66,7 @@ struct DataRegion {
 
     func isNil() -> Bool {
         // This shouldn't modify the data stack. We just peek here.
-        type == .simple && argument == 22
+        type == .simple && (argument == 22 || argument == 23)
     }
 
     /// Reads the next variable-sized integer off the data stack.
